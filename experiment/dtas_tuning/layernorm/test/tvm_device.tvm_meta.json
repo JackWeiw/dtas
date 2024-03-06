@@ -1,0 +1,20 @@
+{
+  "tvm_version": "0.1.0",
+  "func_info": {
+    "fused_layer_norm_cast1_kernel": {
+      "name": "fused_layer_norm_cast1_kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    }
+  }
+}

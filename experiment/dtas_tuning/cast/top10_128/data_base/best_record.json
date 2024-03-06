@@ -1,0 +1,450 @@
+[
+    {
+        "cast_<n: Range(1, 128)>": {
+            "latency(ms)": 0.002274463447673764,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 320,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(320), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(327679)) // T.int64(327680), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(327679)) // T.int64(327680) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(327679)) // T.int64(327680) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(327679)) // T.int64(327680)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(129, 256)>": {
+            "latency(ms)": 0.002651497843338269,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 640,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(640), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(655359)) // T.int64(655360), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(655359)) // T.int64(655360) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(655359)) // T.int64(655360) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(655359)) // T.int64(655360)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(257, 384)>": {
+            "latency(ms)": 0.003490703452814904,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 960,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(960), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(983039)) // T.int64(983040), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(983039)) // T.int64(983040) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(983039)) // T.int64(983040) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(983039)) // T.int64(983040)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(385, 512)>": {
+            "latency(ms)": 0.0068098299753211414,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 1280,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(1280), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(1310719)) // T.int64(1310720), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1310719)) // T.int64(1310720) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1310719)) // T.int64(1310720) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1310719)) // T.int64(1310720)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(513, 640)>": {
+            "latency(ms)": 0.012401243946696911,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 1600,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(1600), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(1638399)) // T.int64(1638400), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1638399)) // T.int64(1638400) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1638399)) // T.int64(1638400) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1638399)) // T.int64(1638400)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(641, 768)>": {
+            "latency(ms)": 0.01472216982386772,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 960,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(960), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(1966079)) // T.int64(1966080), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1966079)) // T.int64(1966080) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1966079)) // T.int64(1966080) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(1966079)) // T.int64(1966080)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(769, 896)>": {
+            "latency(ms)": 0.017195038231631384,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 1120,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(1120), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(2293759)) // T.int64(2293760), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2293759)) // T.int64(2293760) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2293759)) // T.int64(2293760) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2293759)) // T.int64(2293760)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(897, 1024)>": {
+            "latency(ms)": 0.019519147321844434,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 2560,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(2560), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(2621439)) // T.int64(2621440), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2621439)) // T.int64(2621440) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2621439)) // T.int64(2621440) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2621439)) // T.int64(2621440)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1025, 1152)>": {
+            "latency(ms)": 0.02196001447749408,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 2880,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(2880), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(2949119)) // T.int64(2949120), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2949119)) // T.int64(2949120) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2949119)) // T.int64(2949120) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(2949119)) // T.int64(2949120)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1153, 1280)>": {
+            "latency(ms)": 0.024273220587371514,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 3200,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3200), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(3276799)) // T.int64(3276800), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3276799)) // T.int64(3276800) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3276799)) // T.int64(3276800) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3276799)) // T.int64(3276800)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1281, 1408)>": {
+            "latency(ms)": 0.026670641015750562,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 3520,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3520), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(3604479)) // T.int64(3604480), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3604479)) // T.int64(3604480) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3604479)) // T.int64(3604480) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3604479)) // T.int64(3604480)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1409, 1536)>": {
+            "latency(ms)": 0.028987955524278675,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 3840,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3840), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(3932159)) // T.int64(3932160), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3932159)) // T.int64(3932160) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3932159)) // T.int64(3932160) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(3932159)) // T.int64(3932160)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1537, 1664)>": {
+            "latency(ms)": 0.03131435856269114,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 2080,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(2080), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(4259839)) // T.int64(4259840), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4259839)) // T.int64(4259840) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4259839)) // T.int64(4259840) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4259839)) // T.int64(4259840)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1665, 1792)>": {
+            "latency(ms)": 0.03367261027651672,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 2240,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(2240), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(4587519)) // T.int64(4587520), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4587519)) // T.int64(4587520) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4587519)) // T.int64(4587520) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4587519)) // T.int64(4587520)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1793, 1920)>": {
+            "latency(ms)": 0.03599199806252752,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 2400,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(2400), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(4915199)) // T.int64(4915200), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4915199)) // T.int64(4915200) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4915199)) // T.int64(4915200) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(4915199)) // T.int64(4915200)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(1921, 2048)>": {
+            "latency(ms)": 0.03818766941451991,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 5120,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(5120), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(5242879)) // T.int64(5242880), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5242879)) // T.int64(5242880) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5242879)) // T.int64(5242880) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5242879)) // T.int64(5242880)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2049, 2176)>": {
+            "latency(ms)": 0.04063288874007936,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 5440,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(5440), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(5570559)) // T.int64(5570560), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5570559)) // T.int64(5570560) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5570559)) // T.int64(5570560) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5570559)) // T.int64(5570560)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2177, 2304)>": {
+            "latency(ms)": 0.043002284518167455,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 5760,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(5760), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(5898239)) // T.int64(5898240), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5898239)) // T.int64(5898240) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5898239)) // T.int64(5898240) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(5898239)) // T.int64(5898240)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2305, 2432)>": {
+            "latency(ms)": 0.04534460634657837,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 6080,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(6080), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(6225919)) // T.int64(6225920), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6225919)) // T.int64(6225920) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6225919)) // T.int64(6225920) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6225919)) // T.int64(6225920)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2433, 2560)>": {
+            "latency(ms)": 0.04765977363476218,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 3200,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3200), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(6553599)) // T.int64(6553600), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6553599)) // T.int64(6553600) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6553599)) // T.int64(6553600) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6553599)) // T.int64(6553600)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2561, 2688)>": {
+            "latency(ms)": 0.05000288553921569,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 3360,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3360), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(6881279)) // T.int64(6881280), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6881279)) // T.int64(6881280) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6881279)) // T.int64(6881280) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(6881279)) // T.int64(6881280)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2689, 2816)>": {
+            "latency(ms)": 0.052361167264573995,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 7040,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(7040), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(7208959)) // T.int64(7208960), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7208959)) // T.int64(7208960) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7208959)) // T.int64(7208960) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7208959)) // T.int64(7208960)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2817, 2944)>": {
+            "latency(ms)": 0.05467776651069518,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 4,
+                    "grid_size": 7360,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(7360), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(7536639)) // T.int64(7536640), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(4)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7536639)) // T.int64(7536640) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7536639)) // T.int64(7536640) * T.int64(1024)) + ax0_ax1_fused_1 * T.int64(1024) + ax0_ax1_fused_2 * T.int64(4) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7536639)) // T.int64(7536640)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(4) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(2945, 3072)>": {
+            "latency(ms)": 0.05700066268343816,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 3840,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(3840), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(7864319)) // T.int64(7864320), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7864319)) // T.int64(7864320) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7864319)) // T.int64(7864320) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(7864319)) // T.int64(7864320)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3073, 3200)>": {
+            "latency(ms)": 0.0592732132512672,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4000,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4000), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(8191999)) // T.int64(8192000), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8191999)) // T.int64(8192000) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8191999)) // T.int64(8192000) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8191999)) // T.int64(8192000)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3201, 3328)>": {
+            "latency(ms)": 0.06161043196659074,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4160,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4160), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(8519679)) // T.int64(8519680), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8519679)) // T.int64(8519680) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8519679)) // T.int64(8519680) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8519679)) // T.int64(8519680)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3329, 3456)>": {
+            "latency(ms)": 0.06396575894819466,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4320,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4320), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(8847359)) // T.int64(8847360), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8847359)) // T.int64(8847360) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8847359)) // T.int64(8847360) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(8847359)) // T.int64(8847360)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3457, 3584)>": {
+            "latency(ms)": 0.06629256108854589,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4480,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4480), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(9175039)) // T.int64(9175040), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9175039)) // T.int64(9175040) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9175039)) // T.int64(9175040) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9175039)) // T.int64(9175040)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3585, 3712)>": {
+            "latency(ms)": 0.06864490499153976,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4640,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4640), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(9502719)) // T.int64(9502720), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9502719)) // T.int64(9502720) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9502719)) // T.int64(9502720) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9502719)) // T.int64(9502720)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3713, 3840)>": {
+            "latency(ms)": 0.0709095109375,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4800,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4800), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(9830399)) // T.int64(9830400), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9830399)) // T.int64(9830400) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9830399)) // T.int64(9830400) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(9830399)) // T.int64(9830400)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3841, 3968)>": {
+            "latency(ms)": 0.07324728960573476,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 4960,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(4960), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(10158079)) // T.int64(10158080), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10158079)) // T.int64(10158080) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10158079)) // T.int64(10158080) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10158079)) // T.int64(10158080)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    },
+    {
+        "cast_<n: Range(3969, 4096)>": {
+            "latency(ms)": 0.07546106405959031,
+            "config": [
+                {
+                    "len_tx": 256,
+                    "vector_size": 8,
+                    "grid_size": 5120,
+                    "unroll_depth": 256
+                }
+            ],
+            "mod": "# from tvm.script import ir as I\n# from tvm.script import tir as T\n\n@I.ir_module\nclass Module:\n    @T.prim_func(private=True)\n    def main(var_A: T.handle, var_compute: T.handle):\n        T.func_attr({\"tir.noalias\": T.bool(True)})\n        n = T.int64()\n        A = T.match_buffer(var_A, (T.int64(1), n, T.int64(2560)), \"float16\")\n        compute = T.match_buffer(var_compute, (T.int64(1), n, T.int64(2560)))\n        # with T.block(\"root\"):\n        for ax0_ax1_fused_0 in T.thread_binding(T.int64(5120), thread=\"blockIdx.x\"):\n            for ax0_ax1_fused_1 in T.serial((n * T.int64(2560) + T.int64(10485759)) // T.int64(10485760), annotations={\"pragma_auto_unroll_max_step\": 256, \"pragma_unroll_explicit\": 1}):\n                for ax0_ax1_fused_2 in T.thread_binding(T.int64(256), thread=\"threadIdx.x\"):\n                    for ax0_ax1_fused_3 in T.vectorized(T.int64(8)):\n                        with T.block(\"compute\"):\n                            v0 = T.axis.spatial(n, (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10485759)) // T.int64(10485760) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) // T.int64(2560))\n                            v1 = T.axis.spatial(T.int64(2560), (ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10485759)) // T.int64(10485760) * T.int64(2048)) + ax0_ax1_fused_1 * T.int64(2048) + ax0_ax1_fused_2 * T.int64(8) + ax0_ax1_fused_3) % T.int64(2560))\n                            T.where(((ax0_ax1_fused_0 * ((n * T.int64(2560) + T.int64(10485759)) // T.int64(10485760)) + ax0_ax1_fused_1) * T.int64(256) + ax0_ax1_fused_2) * T.int64(8) + ax0_ax1_fused_3 < n * T.int64(2560))\n                            T.reads(A[T.int64(0), v0, v1])\n                            T.writes(compute[T.int64(0), v0, v1])\n                            compute[T.int64(0), v0, v1] = T.Cast(\"float32\", A[T.int64(0), v0, v1])"
+        }
+    }
+]

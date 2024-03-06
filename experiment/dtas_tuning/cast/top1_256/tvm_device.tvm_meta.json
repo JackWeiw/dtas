@@ -1,0 +1,197 @@
+{
+  "tvm_version": "0.1.0",
+  "func_info": {
+    "cast_n_1_to_256__kernel": {
+      "name": "cast_n_1_to_256__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_257_to_512__kernel": {
+      "name": "cast_n_257_to_512__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_513_to_768__kernel": {
+      "name": "cast_n_513_to_768__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_769_to_1024__kernel": {
+      "name": "cast_n_769_to_1024__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_1025_to_1280__kernel": {
+      "name": "cast_n_1025_to_1280__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_1281_to_1536__kernel": {
+      "name": "cast_n_1281_to_1536__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_1537_to_1792__kernel": {
+      "name": "cast_n_1537_to_1792__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_1793_to_2048__kernel": {
+      "name": "cast_n_1793_to_2048__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_2049_to_2304__kernel": {
+      "name": "cast_n_2049_to_2304__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_2305_to_2560__kernel": {
+      "name": "cast_n_2305_to_2560__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_2561_to_2816__kernel": {
+      "name": "cast_n_2561_to_2816__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_2817_to_3072__kernel": {
+      "name": "cast_n_2817_to_3072__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_3073_to_3328__kernel": {
+      "name": "cast_n_3073_to_3328__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_3329_to_3584__kernel": {
+      "name": "cast_n_3329_to_3584__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_3585_to_3840__kernel": {
+      "name": "cast_n_3585_to_3840__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "cast_n_3841_to_4096__kernel": {
+      "name": "cast_n_3841_to_4096__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    }
+  }
+}
