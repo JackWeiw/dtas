@@ -29,7 +29,6 @@ class RTX3090(Arch):
         self.platform = "CUDA"
         self.compute_capability = "86"
         self.target = tvm.target.Target("nvidia/geforce-rtx-3090")
-
         device = tvm.runtime.cuda(dev_id)
         if not device.exist:
             raise RuntimeError(f"Cannot find cuda device {dev_id}.")

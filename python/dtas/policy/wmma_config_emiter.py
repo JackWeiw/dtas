@@ -144,7 +144,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         config.fma_ldg_ratio = (tile_size_m * tile_size_n * 2) / (
                 (tile_size_m + tile_size_n) * in_bytes
             )
-        config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
+        
         # TODO 如何考虑wave tail effect带来的影响
         if np.prod(config.grid_size) > wave_gpu and ab_total_size > self.arch.l2_cache_size:
             '''
@@ -171,7 +171,9 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             config.p_ldg = self.arch.bandwidth[1] * l2_hit_rate + self.arch.bandwidth[0] * (
                 1 - l2_hit_rate
             )
+            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         elif ab_total_size > self.arch.l2_cache_size and np.prod(config.grid_size) <= wave_gpu:
+            if get_log_level()>=1:debug_info(f"中矩阵：{ab_total_size/1024/1024}MB, {np.prod(config.grid_size)}, wave_gpu:{wave_gpu}")
             # 大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数不超过一个 wave 大小；
             a_ldg_request = np.prod(config.grid_size) * tile_size_m * K
             b_ldg_request = np.prod(config.grid_size) * tile_size_n * K
@@ -182,11 +184,13 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             config.p_ldg = self.arch.bandwidth[1] * l2_hit_rate + self.arch.bandwidth[0] * (
                 1 - l2_hit_rate
             )
+            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         elif ab_total_size <= self.arch.l2_cache_size :
+            if get_log_level()>=1:debug_info(f"小矩阵：{ab_total_size/1024/1024}MB")
             #小矩阵，即 M, N, K 较小,A, B 矩阵可以完全放进 L2 and Tile 总数超过一个 wave 大小；
             config.l2_hit_rate = 1
             config.p_ldg = self.arch.bandwidth[1]
-
+            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         if config.fma_ldg_ratio <= (
             self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         ):
@@ -194,6 +198,10 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         else:
             config.performance = self.arch.processing_power[3] * 1e12
             
+        ffma = config.micro_shape_x*config.wmma_m*config.micro_shape_y*config.wmma_n*config.micro_shape_k*config.wmma_k*2
+        lds = (config.micro_shape_x*config.wmma_m+config.micro_shape_y*config.wmma_n)*(config.micro_shape_k*config.wmma_k)
+        config.micro_performance = ffma / lds
+        
         # the small the better
         config.assign_score = 0
         if M % tile_size_m != 0:
@@ -215,7 +223,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         return True
 
     def score_config(self, config: WMMAConfig):
-        return (config.performance,config.fma_ldg_ratio, -config.assign_score)
+        return (config.performance, config.micro_performance, -config.assign_score)
 
     def get_max_tile_size(self, bytes, in_pad, stages: int):
         # return upperbound of tile_m+tile_n
@@ -302,5 +310,5 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             with open(file, 'w') as file:  
                 json.dump(configs_dict_list, file, indent=4)
         config_candidates = config_candidates[:topk] if len(config_candidates) >= topk else config_candidates
-        save_config_candidates(f"/home/weitao/mlc/weitao/configs/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
+        # save_config_candidates(f"/home/weitao/XIAG8XX/gemmconfigs/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
         return config_candidates[:topk] if len(config_candidates) >= topk else config_candidates

@@ -11,7 +11,6 @@ class CompileResult:
     """
     Class to store the result of compilation
     """
-
     def __init__(self, name, config, sch, rt_mod):
         self.name = name
         self.config = config
@@ -53,7 +52,6 @@ class CompileResult:
             if range_tuple != None:
                 for r in range_tuple:
                     suffix += r.to_suffix()
-
             kernel_info_dic = {
                 self.name
                 + suffix

@@ -127,7 +127,7 @@ class Engine:  # pylint: disable=too-few-public-methods
                 range_tuple, configs, arch, name, self.database, self.parallel_build
             )
             range_to_best_result[range_tuple] = best
-        if get_log_level() >= 1:
+        if get_log_level() >= 2:
             for k in range_to_best_result.keys():
                 debug_info(f"before merge {k}")      
         merged_range_to_best_result = self.merge_same_configs(range_to_best_result)

@@ -38,7 +38,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
 
     def generate_config_candidates(self, re_range: Range, in_bytes, is_dynamic_reduction = False, topk=20):
         max_smem_usage = re_range.end * in_bytes
-        debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
+        # debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
         unroll_depth = self.get_unroll_depth()
         base_block_size = self.arch.warp_size * self.arch.sm_partition  # 128
         block_size = base_block_size
@@ -76,7 +76,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         def _score_config(config:ReductionConfig):
             if max_smem_usage <= self.arch.max_smem_per_block and config.temp_storage == "shared.dyn":
                 # 优先udaOccupancyMaxActiveBlocksPerMultiprocessor,若结果相同,使用较大的 block_size
-                debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
+                # debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
                 # 忽略register的影响，因为比较难估算
                 config.max_active_blocks_per_sm = min(
                     self.arch.max_resident_threads_per_sm // config.len_tx,
@@ -107,7 +107,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         else:
             re_range = Range(tir.Var("re_len","int32"), re_len, re_len)
         in_bytes = (DataType(self.func_info.in_dtype).bits+7) // 8
-        debug_info(f"re_range: {re_range}, in_bytes: {in_bytes}")
+        if get_log_level() >= 1: debug_info(f"re_range: {re_range}, in_bytes: {in_bytes}")
         config_candidates = self.generate_config_candidates(
             re_range, in_bytes, is_dynamic_reduction, topk
         )
@@ -116,5 +116,5 @@ class ReductionConfigEmiter(BaseConfigEmiter):
             configs_dict_list = [cf.to_dict() for cf in config_candidates] 
             with open(file, 'w') as file:  
                 json.dump(configs_dict_list, file, indent=4)
-        save_config_candidates(f"/home/weitao/mlc/weitao/configs/layernorm/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
+        # save_config_candidates(f"/home/weitao/XIAG8XX/configs/layernorm/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
         return config_candidates

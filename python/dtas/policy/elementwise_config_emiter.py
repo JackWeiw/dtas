@@ -5,7 +5,6 @@ from tvm.runtime import DataType
 from ..common.config import ElementwiseConfig, Range
 from .base_config_emiter import BaseConfigEmiter
 
-
 class ElementwiseConfigEmiter(BaseConfigEmiter):
     def plan_vectorize(self, num_elements, in_dtype, is_dynamic = False):
         dtype = DataType(in_dtype)

@@ -224,6 +224,7 @@ class WMMAConfig(Config):
         self.statistics = Statistics()
         # statistics
         # 对于tile_m,tile_n的计算访存比
+        self.micro_performance = 0
         self.device_ratio = 0
         self.l2_hit_rate = 0
         self.p_ldg = 0
@@ -242,6 +243,7 @@ class WMMAConfig(Config):
     def to_dict(self) -> Dict:
         dic = {}
         dic["performance"] = self.performance
+        dic["micro_performance"] = self.micro_performance
         dic["tile_shape"] = (self.tile_size_m, self.tile_size_n)
         dic["device_ratio"] = self.device_ratio
         dic["fma_ldg_ratio"] =self.fma_ldg_ratio
@@ -333,7 +335,6 @@ class MMAConfig(Config):
         self.statistics = Statistics()
         
         
-
 class GEMVConfig(Config):
     def __init__(self) -> None:
         self.config_kind = "GEMVConfig"
@@ -376,10 +377,11 @@ class GEMVConfig(Config):
 class ReductionConfig(Config):
     def __init__(self) -> None:
         self.config_kind = "ReductionConfig"
-        self.len_tx = 128 + 96
+        self.len_tx = 128 
         self.unroll_depth = 256
         self.vector_size = 4
-        self.temp_storage = "shared.dyn"
+        # self.temp_storage = "shared.dyn"
+        self.temp_storage = "local"
         self.max_active_blocks_per_sm = 0
         # self.temp_storage = "local"
 

@@ -87,6 +87,7 @@ class TIRReductionScheduler(TIRSchedulerBase):
             #     f"/home/weitao/XIAG8XX/profile/testIR/layernorm/ir/{config.len_tx}_{config.temp_storage}_in{config.vector_size}.py",
             #     sch,
             # )
+            # print(sch.mod)
             return sch
         else:
             if self.func_info.is_inner_reduction:
