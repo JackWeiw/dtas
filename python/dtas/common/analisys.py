@@ -336,7 +336,7 @@ class FuncInfo:
     name: str
     func: tir.PrimFunc
     sch: tir.Schedule
-    blocks: List[BlockInfo]
+    block_infos: List[BlockInfo]
     kind: FuncKind
     dynamic_args: Optional[List[tir.Var]]
 
@@ -345,8 +345,7 @@ class FuncInfo:
         self.name = name
         self.func = func
         self.sch = self.create_schedule()
-        self.blocks, self.has_reduction, self.first_reduction_block = normalize_prim_func(self.sch)
-        # self.blocks = normalize_prim_func(self.create_schedule())
+        self.block_infos, self.has_reduction, self.first_reduction_block = normalize_prim_func(self.sch)
         self.kind = self.get_func_kind()
         self.args = [buffer for buffer in func.buffer_map.values()]
         self.use_fp16 = any([x.dtype == "float16" for x in self.args])
@@ -371,11 +370,10 @@ class FuncInfo:
 
     def get_func_kind(self) -> FuncKind:
         """The kind of the function."""
-        # blocks = normalize_prim_func(self.create_schedule())
         if get_log_level() >= 2:
             debug_info("Begin to normalize & set FuncKind.......")
-        blocks = self.blocks
-        if not blocks:
+        block_infos = self.block_infos
+        if not block_infos:
             return FuncKind.KFunc_Fallback
         if self.has_reduction:
             func_kind = self.first_reduction_block.get_reduction_type()
@@ -393,7 +391,7 @@ class FuncInfo:
                 self.func = self.sch.mod["main"]
                 return func_kind
             elif func_kind == FuncKind.kFunc_GEMV:
-                is_inner_reduction = normalize_gemv(self.sch, blocks)
+                is_inner_reduction = normalize_gemv(self.sch, block_infos)
                 if is_inner_reduction == None:
                     return FuncKind.KFunc_Fallback
                 else:
@@ -405,10 +403,10 @@ class FuncInfo:
                 return func_kind
             else:
                 if get_log_level() >= 1:debug_info("FuncKind == kFunc_Reduction,begin to normalize..." )
-                self.general_red,blocks,self.dyn_red,self.red_len,self.in_dtype= is_general(self.sch, blocks)
+                self.general_red, self.block_infos, self.dyn_red, self.red_len, self.in_dtype = is_general(self.sch, block_infos)
                 if self.general_red:
                     if get_log_level() >= 1: debug_info("is_general_reduction")
-                    self.num_leading_s,self.num_trailing_r= normalize_general_reduction(self.sch, blocks)
+                    self.num_leading_s, self.num_trailing_r = normalize_general_reduction(self.sch, self.block_infos)
                 else:
                     if get_log_level() >= 1:
                         debug_info("not_general_reduction")
@@ -417,9 +415,24 @@ class FuncInfo:
                         self.c_factor,
                         self.loop_order,
                         self.s_split_index,
-                    ) = normalize_reduction(self.sch, blocks)
+                    ) = normalize_reduction(self.sch, self.blocks)
                 self.func = self.sch.mod["main"]
-                # print(self.func)
+                # if self.dyn_red:
+                #     assert_stmt = tir.AssertStmt(self.red_len > 0, tvm.runtime.String(f"{self.red_len} should be greater than 0"), self.func.body.block.body)
+                #     old_block = self.func.body.block
+                #     new_block = tir.Block(old_block.iter_vars, old_block.reads, 
+                #                           old_block.writes, old_block.name_hint, 
+                #                           assert_stmt, old_block.init, old_block.alloc_buffers, 
+                #                           old_block.match_buffers, old_block.annotations)
+                #     new_func_body = tir.BlockRealize(self.func.body.iter_values, self.func.body.predicate, new_block)
+                #     self.func = self.func.with_body(new_func_body)
+                    # debug_info(self.func.body.block.body)
+                    # debug_info(new_block)
+                    # debug_info(f"type:\n{type(self.func)}")
+                    # debug_info(f"type:\n{type(self.func.body)}")
+                    # debug_info(f"type:\n{type(self.func.body.block)}")
+                    # debug_info(f"new_block_body:\n{self.func}")
+                # debug_info(self.func)
                 return FuncKind.kFunc_Reduction
         elif blocks[0].is_elementwise(self.sch):
             if get_log_level() >= 2:
@@ -447,13 +460,15 @@ class FuncInfo:
 _normalize_prim_func = get_global_func("tir.schedule.NormalizePrimFunc")
 
 
-def normalize_prim_func(sch: tir.Schedule) -> Optional[List[BlockInfo]]:
+def normalize_prim_func(sch: tir.Schedule) -> Optional[Tuple[List[BlockInfo], bool, BlockInfo]]:
     """Normalize the primfunc to normal form"""
     try:
         result = _normalize_prim_func(sch)
         if result is None:
+            print("result is None")
             return None
     except Exception:  # pylint: disable=broad-except
+        print("exception")
         return None
 
     def _iter_kind(i: tir.IterVar) -> str:
@@ -486,7 +501,7 @@ def normalize_prim_func(sch: tir.Schedule) -> Optional[List[BlockInfo]]:
             if is_reduction:
                 has_reduction = is_reduction
                 first_reduction_block = blocks[-1]
-    return blocks, has_reduction, first_reduction_block
+    return (blocks, has_reduction, first_reduction_block)
 
 
 def can_apply_wmma(wmma_shape, in_dtype, out_dtype) -> bool:
@@ -643,6 +658,7 @@ def normalize_gemv(sch: tir.Schedule, block_infos: List[BlockInfo]):
 
 def is_general(sch: tir.Schedule, block_infos: List[BlockInfo]):
     ## TODO 报错管理
+    # debug_info(sch.mod)
     block_infos = try_inline_contiguous_spatial(sch, block_infos)
     is_general = False
     in_dtype = sch.get(block_infos[0].block_rv).reads[0].buffer.dtype
@@ -657,6 +673,7 @@ def is_general(sch: tir.Schedule, block_infos: List[BlockInfo]):
         # softmax len(block_infos) > 2, layernorm  len(block_stmt.writes) ==2
         is_general = True
         # num_leading_s, num_trailing_r = _normalize_general_reduction(sch, block_infos)
+    # debug_info(sch.mod)
     return is_general, block_infos, is_dynamic_reduction, reduction_len, in_dtype
 
 
@@ -743,14 +760,16 @@ def normalize_general_reduction(sch: tir.Schedule, block_infos: List[BlockInfo])
             ndim=num_last_block_iter,
         )
         sch.transform_block_layout(block_infos[-1].block_rv, index_map)
+    # debug_info(f"num_leading_s:{num_leading_s},num_trailing_r:{num_trailing_r}")
     try:
-        # TODO: fix num_leading_s = 0 case
-        assert num_trailing_r > 0,"num_trailing_r > 0"
+    # TODO: fix num_leading_s = 0 case
+        assert num_trailing_r > 0, "num_trailing_r > 0"
         for block in block_infos[1:-1]:
-            assert block.dom_kind() == dom_kind, f"block.dom_kind{block.dom_kind()}, {dom_kind}"
+            assert block.dom_kind() == dom_kind, f"block.dom_kind: {block.dom_kind()}, {dom_kind}"
         assert block_infos[-1].is_injective(),"block_infos[-1].is_injective()"
         assert len(block_infos[-1].dom_kind()) <= len(dom_kind),"len(block_infos[-1].dom_kind()) <= len(dom_kind)"
     except AssertionError:
+        debug_info(f"Failed to normalize general reduction: {dom_kind}")
         return None
     return num_leading_s, num_trailing_r
 
@@ -980,7 +999,6 @@ def get_index_map(
         B_index_map,
         C_index_map,
     )
-
 
 
 def try_inline(

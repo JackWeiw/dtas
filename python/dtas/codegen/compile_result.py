@@ -41,8 +41,6 @@ class CompileResult:
             config={"tir.use_async_copy": True},
         ):
             target = Target(target, "c")
-            # mod = tvm.IRModule({"main": self.sch.mod["main"]})
-            # mod = rx.transform.AttachGlobalSymbol()(mod)
             mod = tvm.lower(self.sch.mod["main"])
             mixed_mod_passes = get_global_func("driver.mixed_mod_passes")(mod, target)
             device_mod_passes = get_global_func("driver.device_mod_passes")(mod, target)
@@ -67,6 +65,4 @@ class CompileResult:
             lib = tvm.build(
                 self.sch.mod["main"], target=Target(target, "c"), name=self.name
             )
-            host_code = lib.get_source()
-            device_code = lib.imported_modules[0].get_source()
         return host_code, device_code, kernel_info_dic

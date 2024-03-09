@@ -32,7 +32,7 @@ class TIRSchedulerBase:
     ) -> None:
         self.func_info = func_info
         self.block_size = [1, 1, 1]  # blockDim.xyz
-        self.passes = []
+        self.passes = self.make_passes()
         
     def cooperative_fetch(
         self,
@@ -96,10 +96,12 @@ class TIRSchedulerBase:
         # if config.unroll:
         #     sch.annotate(ax, "pragma_unroll_explicit", ann_val=1)
 
-    def make_passes(self) -> None:
-        self.passes.append(FixCudaCastPass().get_pass())
+    def make_passes(self)->List[tvm.transform.Pass]: 
+        passes = []
+        passes.append(AddAssert(self.func_info.dynamic_args))
         # self.passes.append(CheckVectorLoadPass().get_pass())
         # self.passes.append(RemoveConditionInVectorizePass().get_pass())
+        return passes
     """
     new
     """
@@ -154,12 +156,15 @@ class TIRSchedulerBase:
                 if get_log_level() >= 2:
                     debug_info(f"fail to apply config:\n{config}")
                 return config, sch, None
+            mod = sch.mod
+            mod = tvm.transform.Sequential(self.passes)(mod)
+            # debug_info(mod)
             with tvm.transform.PassContext(
                 disabled_pass=["tir.AnnotateEntryFunc"],
-                config={"tir.use_async_copy": True},
+                config={"tir.use_async_copy": True,},
             ):
                 target = arch.target
-                rt_mod = tvm.build(sch.mod["main"], target=target, name=name)
+                rt_mod = tvm.build(mod["main"], target=target, name=name)
                 if get_log_level() >= 2:
                     debug_info(f"build success!")
         except:
@@ -197,7 +202,6 @@ class TIRSchedulerBase:
                 continue
             if rt_mod is None:
                 continue
-            
             cpresult = CompileResult(name, config, sch, rt_mod)
             timer_cuda_mod = rt_mod.time_evaluator(
                 name, arch.device, number=5, min_repeat_ms=50
@@ -228,7 +232,7 @@ class TIRSchedulerBase:
                 best_latency = latency
                 best = cpresult
         if get_log_level() >= 1:
-            debug_info("[WTM] best config: {:.3f} ms".format(latency ))
+            debug_info("[WTM] best config: {:.3f} ms".format(best_latency ))
         if database is not None and best is not None:
             database.commit_best_record(range_tuple, best)
         del profile_tensors
@@ -284,10 +288,10 @@ class TIRSchedulerBase:
             if latency < best_latency:
                 best_latency = latency
                 best = cpresult
-        if database is not None:
+        if database is not None and best is not None:
             database.commit_best_record(range_tuple, best)
         if get_log_level() >= 1:
-            debug_info("[WTM] best config: {:.3f} ms".format(latency))
+            debug_info("[WTM] best config: {:.3f} ms".format(best_latency))
         del profile_tensors
         return cpresults, best
 

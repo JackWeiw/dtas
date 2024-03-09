@@ -44,9 +44,4 @@ class TIRElementwiseScheduler(TIRSchedulerBase):
         sch.annotate(u, ann_key="pragma_unroll_explicit", ann_val=1)
         sch.bind(tx, "threadIdx.x")
         sch.vectorize(vec)
-        # print(sch.mod)
-        # save_to_file(
-        #     f"/home/weitao/XIAG8XX/profile/testIR/Elementwise/ir/{config.len_bx}.py",
-        #     sch,
-        # )
         return sch

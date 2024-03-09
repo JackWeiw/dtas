@@ -16,6 +16,10 @@ def save_code(file, code):
         f.write(code)
 
 class CodeGenerator:
+    """_Codegenerator_
+        
+    
+    """
     def __init__(self, target) -> None:
         self.target = target
         self.kernel_handles = [
@@ -71,6 +75,7 @@ class CodeGenerator:
 
     def get_host_launch_args_str(self, host_code: str, len_args):
         """
+        TODO : when tuning gemeral reduction <1024 cache, >1024 shared.dyn >4096 cache need to take extra control
         find
         (((TVMValue*)stack_value)[5].v_int64) = (int64_t)1;
         ((int32_t*)stack_tcode)[5] = 0;

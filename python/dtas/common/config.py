@@ -380,8 +380,8 @@ class ReductionConfig(Config):
         self.len_tx = 128 
         self.unroll_depth = 256
         self.vector_size = 4
-        # self.temp_storage = "shared.dyn"
-        self.temp_storage = "local"
+        self.temp_storage = "shared.dyn"
+        # self.temp_storage = "local"
         self.max_active_blocks_per_sm = 0
         # self.temp_storage = "local"
 

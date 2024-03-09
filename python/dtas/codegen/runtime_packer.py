@@ -35,6 +35,10 @@ struct kernel_entry_info
   int64_t launch_args[7];
   void *kernel_handle;
   std::string name;
+  kernel_entry_info() : kernel_handle(nullptr), name("")  
+    {  
+        std::fill_n(std::begin(launch_args), 7, -1);  
+    }  
 };
 
 """

@@ -39,6 +39,6 @@ def save_to_json(profile, filename):
 
 save_to_json(
     result,
-    "/home/weitao/XIAG8XX/profile/dtas_tuned/elementwise/add/int8/top1_256/laytency.json",
+    "/home/weitao/XIAG8XX/profile/dtas_tuned/elementwise/add/int8/top1_256/latency.json",
 )   
 save_to_json(bandwidth, "/home/weitao/XIAG8XX/profile/dtas_tuned/elementwise/add/int8/top1_256/bandwidth.json")

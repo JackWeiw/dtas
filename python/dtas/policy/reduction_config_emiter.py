@@ -37,7 +37,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
             return 256
 
     def generate_config_candidates(self, re_range: Range, in_bytes, is_dynamic_reduction = False, topk=20):
-        max_smem_usage = re_range.end * in_bytes
+        max_smem_usage = (re_range.end + 2) * in_bytes
         # debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
         unroll_depth = self.get_unroll_depth()
         base_block_size = self.arch.warp_size * self.arch.sm_partition  # 128
@@ -48,10 +48,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         else:
             # case reduction is dynamic and reduction_len upperbound < 1024, 
             # if use smem will introduce extra sync overhead, so we use "cache" as temp storage 
-            if is_dynamic_reduction:
-                temp_storage = "cache"
-            else:
-                temp_storage = "local"
+            temp_storage = "cache"
                 
         if temp_storage == "shared.dyn":
             vec_candidate = self.plan_vectorize(re_range, in_bytes)
@@ -107,14 +104,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         else:
             re_range = Range(tir.Var("re_len","int32"), re_len, re_len)
         in_bytes = (DataType(self.func_info.in_dtype).bits+7) // 8
-        if get_log_level() >= 1: debug_info(f"re_range: {re_range}, in_bytes: {in_bytes}")
         config_candidates = self.generate_config_candidates(
             re_range, in_bytes, is_dynamic_reduction, topk
         )
-        def save_config_candidates(file, config_candidates):
-            import json
-            configs_dict_list = [cf.to_dict() for cf in config_candidates] 
-            with open(file, 'w') as file:  
-                json.dump(configs_dict_list, file, indent=4)
-        # save_config_candidates(f"/home/weitao/XIAG8XX/configs/layernorm/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
         return config_candidates

@@ -232,25 +232,4 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         )
         sch.bind(f1, "threadIdx.x")
         sch.vectorize(f2)
-        # if sch.get(ax).extent >= (config.i*config.j):
-        #     print("wudinoumo")
-        #     _, f0 = sch.split(ax, [None, config.i*config.j])
-        #     sch.bind(f0, "threadIdx.y")
-        # else:
-        #     sch.bind(ax, "threadIdx.y")
-        # save_to_file("/home/weitao/XIAG8XX/profile/async_test/wt.py",sch)
-        # save_to_file(
-        #     "/home/weitao/XIAG8XX/profile/testIR/GEMM/m_n2560_k10240/wmma/{}/{}i{}j{}_x{}y{}_in{}{}.py".format(
-        #         wmma_shape,
-        #         "async/" if config.use_async_copy else "",
-        #         config.i,
-        #         config.j,
-        #         config.micro_shape_x,
-        #         config.micro_shape_y,
-        #         config.in_vec_len_a,
-        #         "_async" if config.use_async_copy else "",
-        #     ),
-        #     sch,
-        # )
-        # print(sch.mod)
         return sch

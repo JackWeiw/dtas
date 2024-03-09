@@ -75,19 +75,17 @@ class TIRReductionScheduler(TIRSchedulerBase):
                     # sch.transform_layout(SS, ("write", 0), self._index_map_func,pad_value = 0.0)
                 #     sch.storage_align(SS, 0, -2, 16, 8)
                 sch.compute_at(SS, bx, preserve_unit_loops=True)
+                if not self.func_info.dyn_red:
+                    sch.annotate(SS, "tir.manifest_shared_memory_local_stage", 1)
                 auto_inline_producers(sch, SS)
                 r_loop = sch.get_loops(SS)[-1]
                 r_loop, tx, vec = sch.split(
                     r_loop,
                     [None, config.len_tx, config.vector_size],
                 )
+                # sch.reorder(tx, r_loop, vec)
                 sch.bind(tx, "threadIdx.x")
                 sch.vectorize(vec)
-            # save_to_file(
-            #     f"/home/weitao/XIAG8XX/profile/testIR/layernorm/ir/{config.len_tx}_{config.temp_storage}_in{config.vector_size}.py",
-            #     sch,
-            # )
-            # print(sch.mod)
             return sch
         else:
             if self.func_info.is_inner_reduction:
