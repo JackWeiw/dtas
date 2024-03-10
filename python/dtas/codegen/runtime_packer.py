@@ -35,16 +35,13 @@ struct kernel_entry_info
   int64_t launch_args[7];
   void *kernel_handle;
   std::string name;
-  kernel_entry_info() : kernel_handle(nullptr), name("")  
-    {  
-        std::fill_n(std::begin(launch_args), 7, -1);  
-    }  
 };
 
 """
 
 
 class RuntimePacker:
+    
     def __init__(
         self,
         kernel_handles,
@@ -240,6 +237,13 @@ class RuntimePacker:
     def pack_to_tvm_runtime(
         self,
     ) -> Module:
+        """A function to pack the host and device code to tvm runtime module
+
+        Returns
+        -------
+        Module
+            tvm.runtime.Module
+        """        
         host_code = self.get_host_code()
         host_rt_module = self.pack_to_host_runtime(host_code)
 
@@ -254,6 +258,17 @@ class RuntimePacker:
         return host_rt_module
 
 def load_module_from_file(work_dir):
+    """load .so and .cubin file from the specified directory and pack it to tvm runtime module
+
+    Parameters
+    ----------
+    work_dir : str
+        dtas working directory
+
+    Returns
+    -------
+        tvm.runtime.Module
+    """    
     if not os.path.exists(work_dir):
         raise FileNotFoundError(f"Directory {work_dir} not found.")
     host_so_path = os.path.join(work_dir, "host.so")

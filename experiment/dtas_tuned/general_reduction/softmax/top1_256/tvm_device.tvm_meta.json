@@ -1,0 +1,82 @@
+{
+  "tvm_version": "0.1.0",
+  "func_info": {
+    "fused_softmax_cast_n_1_to_1024__kernel": {
+      "name": "fused_softmax_cast_n_1_to_1024__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x"
+      ]
+    },
+    "fused_softmax_cast_n_1025_to_2048__kernel": {
+      "name": "fused_softmax_cast_n_1025_to_2048__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_softmax_cast_n_2049_to_2560__kernel": {
+      "name": "fused_softmax_cast_n_2049_to_2560__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_softmax_cast_n_2561_to_3072__kernel": {
+      "name": "fused_softmax_cast_n_2561_to_3072__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_softmax_cast_n_3073_to_3584__kernel": {
+      "name": "fused_softmax_cast_n_3073_to_3584__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_softmax_cast_n_3585_to_4096__kernel": {
+      "name": "fused_softmax_cast_n_3585_to_4096__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    }
+  }
+}

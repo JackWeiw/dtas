@@ -69,7 +69,7 @@ class TIRReductionScheduler(TIRSchedulerBase):
                     ann_val=config.unroll_depth,
                 )
                 sch.annotate(r_loop, ann_key="pragma_unroll_explicit", ann_val=1)
-            if config.temp_storage in ["shared.dyn", "local"]:
+            if config.temp_storage in ["shared.dyn"]:
                 SS = sch.cache_read(blocks[0], 0, config.temp_storage)
                 # if config.temp_storage == "shared.dyn":
                     # sch.transform_layout(SS, ("write", 0), self._index_map_func,pad_value = 0.0)

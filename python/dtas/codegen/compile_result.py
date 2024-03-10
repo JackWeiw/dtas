@@ -20,7 +20,7 @@ class CompileResult:
         self.profile_tensors = []
         self.time_evaluator = None
 
-    def profile(self):
+    def profile(self):       
         """
         根据range 均匀分割取得的profile tensors
         TODO 是否有normalize的方法?
@@ -36,6 +36,20 @@ class CompileResult:
             return 1e9
         
     def get_code_and_kernel_info(self, target, range_tuple=None):
+        """A function to get the code and kernel info of the compiled module
+
+        Parameters
+        ----------
+        target : str or tvm.Target
+            target to gen code
+        range_tuple : Tuple[Range], optional
+            corresponding range tuple, by default None
+
+        Returns
+        -------
+        str, str, dict
+            host code, device code, kernel info
+        """        
         with tvm.transform.PassContext(
             disabled_pass=["tir.AnnotateEntryFunc"],
             config={"tir.use_async_copy": True},

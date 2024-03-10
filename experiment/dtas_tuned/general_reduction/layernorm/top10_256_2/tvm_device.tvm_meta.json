@@ -1,0 +1,95 @@
+{
+  "tvm_version": "0.1.0",
+  "func_info": {
+    "fused_layer_norm_cast1_n_1_to_256__kernel": {
+      "name": "fused_layer_norm_cast1_n_1_to_256__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_layer_norm_cast1_n_257_to_512__kernel": {
+      "name": "fused_layer_norm_cast1_n_257_to_512__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_layer_norm_cast1_n_513_to_1280__kernel": {
+      "name": "fused_layer_norm_cast1_n_513_to_1280__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_layer_norm_cast1_n_1281_to_2816__kernel": {
+      "name": "fused_layer_norm_cast1_n_1281_to_2816__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_layer_norm_cast1_n_2817_to_3072__kernel": {
+      "name": "fused_layer_norm_cast1_n_2817_to_3072__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    },
+    "fused_layer_norm_cast1_n_3073_to_4096__kernel": {
+      "name": "fused_layer_norm_cast1_n_3073_to_4096__kernel",
+      "arg_types": [
+        "handle",
+        "handle",
+        "handle",
+        "handle",
+        "int64"
+      ],
+      "launch_param_tags": [
+        "blockIdx.x",
+        "threadIdx.x",
+        "tir.use_dyn_shared_memory"
+      ]
+    }
+  }
+}

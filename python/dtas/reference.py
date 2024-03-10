@@ -1,7 +1,6 @@
 from typing import List
 
 import numpy as np
-# import torch
 import tvm
 from tvm import tir
 
@@ -17,7 +16,7 @@ def get_ref_tensor(shape: list, device: str, dtype: str) -> tvm.runtime.NDArray:
         )
 
 
-## 暂时没卵用
+# ## 暂时没卵用
 # def get_reference_output(
 #     func: tir.PrimFunc, args, device="cuda:0", seed=0
 # ) -> List[np.ndarray]:

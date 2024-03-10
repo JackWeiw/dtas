@@ -331,8 +331,8 @@ class BlockInfo:
 
 
 class FuncInfo:
-    """Information about a TIR function."""
-
+    """Information about a TIR prim function
+    """    
     name: str
     func: tir.PrimFunc
     sch: tir.Schedule
@@ -461,7 +461,8 @@ _normalize_prim_func = get_global_func("tir.schedule.NormalizePrimFunc")
 
 
 def normalize_prim_func(sch: tir.Schedule) -> Optional[Tuple[List[BlockInfo], bool, BlockInfo]]:
-    """Normalize the primfunc to normal form"""
+    """Normalize the primfunc to normal form
+    """    
     try:
         result = _normalize_prim_func(sch)
         if result is None:
@@ -520,9 +521,14 @@ def can_apply_wmma(wmma_shape, in_dtype, out_dtype) -> bool:
 
 
 def normalize_gemm(sch: tir.Schedule, first_reduction_block:BlockInfo):
-    """
-    Normalize generic matmul to C[S, I, J] += A[S, I, K] * B[S, J, K]
-    """
+    """    Normalize generic matmul to C[S, I, J] += A[S, I, K] * B[S, J, K]
+
+    Args:
+        sch (tir.Schedule): the schedule to be transformed
+        first_reduction_block (BlockInfo): first_reduction_block
+
+    Returns:
+    """    
     # block_infos = normalize_prim_func(sch)
     ## TODO 报错管理
     root_block = get_root_block(sch)

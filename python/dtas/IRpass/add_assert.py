@@ -7,7 +7,10 @@ from tvm.ir.transform import PassContext, module_pass
 
 @module_pass(opt_level=0, name="AddAssert")
 class AddAssert:  # pylint: disable=too-few-public-methods
-    """A IRModule pass that add assert that dynamic shape > 0 if there are dynamic args to all PrimFuncs in the module."""
+    """A IRModule pass that add assert that dynamic shape > 0 if there are dynamic args to all PrimFuncs in the module.
+        add more constraint condtion to make expr more simple
+        see discuss https://github.com/apache/tvm/pull/16679 here
+    """
 
     def __init__(self, dynamic_args: List[tir.PrimExpr]):
         """Construct a new AddAssert pass.

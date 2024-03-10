@@ -18,21 +18,6 @@ from ..policy import (
 )
 from ..logging import get_log_level, debug_info
 
-# gemm_template = []
-# # ,TIRMatmulScheduler
-# _scheduler_map = {
-#     "GEMM": TIRWMMAScheduler,
-#     "wmma": TIRWMMAScheduler,
-# }
-
-# func_kind_map = {
-#     FuncKind.kFunc_GEMM: "GEMM",
-#     FuncKind.kFunc_GEMV: "GEMV",
-#     FuncKind.kFunc_Reduction: "Reduction",
-#     FuncKind.kFunc_Elementwise: "Elementwise",
-# }
-
-
 def get_scheduler_template(func_kind: FuncKind, use_tc: bool, sm:str) -> TIRSchedulerBase:
     if func_kind == FuncKind.kFunc_GEMM:
         if use_tc:

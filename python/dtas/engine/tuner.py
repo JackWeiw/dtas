@@ -20,7 +20,8 @@ from ..codegen.runtime_packer import RuntimePacker
 from .database import DataBase
 
 class Engine:  # pylint: disable=too-few-public-methods
-    """A IRModule pass that applies a list of ScheduleRules to all PrimFuncs in the module."""
+    """dtas tuning engine.
+    """
 
     def __init__(
         self,
@@ -29,12 +30,13 @@ class Engine:  # pylint: disable=too-few-public-methods
         parallel_build: bool = True,
         work_dir: str = None,
     ):
-        """Construct a new ApplyFastTuning pass.
+        """Tuning engine for dtas
 
-        Parameters
-        ----------
-        meta_database : str
-            The path of database.
+        Args:
+            topk (int, optional): emit topk candidates. Defaults to 10.
+            range_div_factor (int, optional): _description_. Defaults to 256.
+            parallel_build (bool, optional): whether enable parallel build. Defaults to True.
+            work_dir (str, optional): dtas tuning work directory . Defaults to None.
         """
         self.topk = topk
         self.parallel_build = parallel_build
@@ -212,6 +214,14 @@ class Engine:  # pylint: disable=too-few-public-methods
     def merge_same_configs(
         self, best_compile_results: Dict[Tuple[Range], CompileResult]
     ) -> Dict[Tuple[Range], CompileResult]:
+        """Merge adjacent ranges with same config
+
+        Args:
+            best_compile_results (Dict[Tuple[Range], CompileResult]): range to best compile result
+
+        Returns:
+            Dict[Tuple[Range], CompileResult]: The merged range to best compile result
+        """        
         def try_merge(ranges: List[Range], range_tuple: List[Range], len = 1,) -> bool:
             try:
                 ranges[len-1] = ranges[len-1].merge(range_tuple[len-1])
