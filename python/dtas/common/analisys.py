@@ -406,7 +406,7 @@ class FuncInfo:
                 self.general_red, self.block_infos, self.dyn_red, self.red_len, self.in_dtype = is_general(self.sch, block_infos)
                 if self.general_red:
                     if get_log_level() >= 1: debug_info("is_general_reduction")
-                    self.num_leading_s, self.num_trailing_r = normalize_general_reduction(self.sch, self.block_infos)
+                    self.num_leading_s, self.num_trailing_r, self.rows = normalize_general_reduction(self.sch, self.block_infos)
                 else:
                     if get_log_level() >= 1:
                         debug_info("not_general_reduction")
@@ -417,6 +417,7 @@ class FuncInfo:
                         self.s_split_index,
                     ) = normalize_reduction(self.sch, self.blocks)
                 self.func = self.sch.mod["main"]
+                # debug_info(self.sch.mod)
                 # if self.dyn_red:
                 #     assert_stmt = tir.AssertStmt(self.red_len > 0, tvm.runtime.String(f"{self.red_len} should be greater than 0"), self.func.body.block.body)
                 #     old_block = self.func.body.block
@@ -678,7 +679,6 @@ def is_general(sch: tir.Schedule, block_infos: List[BlockInfo]):
     if len(block_infos) > 2 or len(block_stmt.writes) != 1:
         # softmax len(block_infos) > 2, layernorm  len(block_stmt.writes) ==2
         is_general = True
-        # num_leading_s, num_trailing_r = _normalize_general_reduction(sch, block_infos)
     # debug_info(sch.mod)
     return is_general, block_infos, is_dynamic_reduction, reduction_len, in_dtype
 
@@ -766,6 +766,13 @@ def normalize_general_reduction(sch: tir.Schedule, block_infos: List[BlockInfo])
             ndim=num_last_block_iter,
         )
         sch.transform_block_layout(block_infos[-1].block_rv, index_map)
+    loops = sch.get_loops(block_infos[-1].block_rv)
+    rows = 1
+    for loop in loops[: num_leading_s]:
+        if isinstance(sch.get(loop).extent, tir.IntImm):
+            rows *= sch.get(loop).extent.value
+    # rows = sch.get(sch.fuse(*loops[: num_leading_s])).extent.value
+    debug_info(f"rows:{rows}")
     # debug_info(f"num_leading_s:{num_leading_s},num_trailing_r:{num_trailing_r}")
     try:
     # TODO: fix num_leading_s = 0 case
@@ -777,7 +784,8 @@ def normalize_general_reduction(sch: tir.Schedule, block_infos: List[BlockInfo])
     except AssertionError:
         debug_info(f"Failed to normalize general reduction: {dom_kind}")
         return None
-    return num_leading_s, num_trailing_r
+    # debug_info(sch.mod)
+    return num_leading_s, num_trailing_r, rows
 
 
 def normalize_elementwise(sch: tir.Schedule, block_infos: List[BlockInfo]):

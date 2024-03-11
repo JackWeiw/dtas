@@ -2,7 +2,6 @@ import tvm
 import numpy as np
 import dtas
 from dtas.codegen.runtime_packer import load_module_from_file
-dtype = "float32"
 
 dev = tvm.cuda(6)
 rt_mod = load_module_from_file("/home/weitao/XIAG8XX/profile/dtas_tuned/general_reduction/softmax/top1_256")

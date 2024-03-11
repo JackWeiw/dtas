@@ -167,7 +167,9 @@ class TIRSchedulerBase:
                 rt_mod = tvm.build(mod["main"], target=target, name=name)
                 if get_log_level() >= 2:
                     debug_info(f"build success!")
-        except:
+        except Exception as e:
+            if get_log_level() >= 1:
+                debug_info(f"apply_and_build failed: {e}")
             sch = None
             rt_mod = None
         return (

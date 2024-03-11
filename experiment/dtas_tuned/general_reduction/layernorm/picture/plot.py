@@ -49,4 +49,4 @@ plt.legend()
 plt.grid(True)  # 添加网格线以便更好地查看数据 
   
 # 显示图形  
-plt.savefig("./wtm2.png")
+plt.savefig("./wtm3.png")

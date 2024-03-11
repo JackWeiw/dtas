@@ -26,7 +26,6 @@ class Engine:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         topk: int = 10,
-        range_div_factor: int = 256,
         parallel_build: bool = True,
         work_dir: str = None,
     ):
@@ -34,14 +33,12 @@ class Engine:  # pylint: disable=too-few-public-methods
 
         Args:
             topk (int, optional): emit topk candidates. Defaults to 10.
-            range_div_factor (int, optional): _description_. Defaults to 256.
             parallel_build (bool, optional): whether enable parallel build. Defaults to True.
             work_dir (str, optional): dtas tuning work directory . Defaults to None.
         """
         self.topk = topk
         self.parallel_build = parallel_build
         self.upper_bound = {}
-        self.range_div_factor = range_div_factor
         if work_dir is None:
             work_dir = tempfile.TemporaryDirectory().name
         self.work_dir = work_dir
@@ -81,7 +78,7 @@ class Engine:  # pylint: disable=too-few-public-methods
                 )
                 if fp16:
                     use_fp16 = True
-                index_table, index_stmt = self.get_index_table(ranges_best_result)
+                index_table, index_stmt = self.get_index_table(ranges_best_result, range_div_factor)
                 if get_log_level() >= 2:
                     debug_info(f"index_table: {index_table}, index_stmt: {index_stmt}")
                 cg.gen_code_for_func(
@@ -136,7 +133,7 @@ class Engine:  # pylint: disable=too-few-public-methods
         return merged_range_to_best_result, use_fp16, len(func_info.dynamic_args)
 
     def gen_range_tuples(self, func_info: FuncInfo, range_div_factor: int):
-        if get_log_level()>=1: debug_info("getting range tuple")
+        if get_log_level()>=2: debug_info("getting range tuple")
         if len(func_info.dynamic_args) == 0:
             if get_log_level() >= 1:
                 debug_info(" generating range_tuples, no dynamic_arg")
@@ -157,7 +154,7 @@ class Engine:  # pylint: disable=too-few-public-methods
         return range_tuples
 
     def get_index_table(
-        self, ranges_best_result: Dict[Tuple[Range], CompileResult]
+        self, ranges_best_result: Dict[Tuple[Range], CompileResult], range_div_factor: int
     ) -> Tuple[list, str]:
         if get_log_level()>=1:debug_info("getting index table .....")
         index_table = []
@@ -171,15 +168,15 @@ class Engine:  # pylint: disable=too-few-public-methods
             dyn_arg_name = ranges_best_result[0][0][0].var.name
             upper_bound = self.upper_bound[dyn_arg_name]
             # index_len means the length of index_table from 0
-            index_len = (upper_bound + self.range_div_factor - 1) // self.range_div_factor -1
+            index_len = (upper_bound + range_div_factor - 1) // range_div_factor -1
             index_stmt += (
-                f"({dyn_arg_name}/{str(self.range_div_factor)}) > {str(index_len)} ? {str(index_len)} : {dyn_arg_name}/{str(self.range_div_factor)};\n"
+                f"({dyn_arg_name}/{str(range_div_factor)}) > {str(index_len)} ? {str(index_len)} : {dyn_arg_name}/{str(range_div_factor)};\n"
             )
             if get_log_level()>=1: debug_info(f"index_stmt: {index_stmt}")
             i = 0
             for range_tuple, best_cp_result in ranges_best_result:
                 for _ in range(
-                    range_tuple[0].start, range_tuple[0].end + 1, self.range_div_factor
+                    range_tuple[0].start, range_tuple[0].end + 1, range_div_factor
                 ):
                     index_table.append(i)
                 i += 1
@@ -191,21 +188,21 @@ class Engine:  # pylint: disable=too-few-public-methods
             # case there are two dynamic args
             index_table_size_0 = (
                 upper_bound_0
-                + self.range_div_factor
+                + range_div_factor
                 - 1
-            ) // self.range_div_factor
-            index_len = ((upper_bound_0 + self.range_div_factor - 1) // self.range_div_factor) * ((upper_bound_1 + self.range_div_factor - 1) // self.range_div_factor) - 1
+            ) // range_div_factor
+            index_len = ((upper_bound_0 + range_div_factor - 1) // range_div_factor) * ((upper_bound_1 + range_div_factor - 1) // range_div_factor) - 1
             if get_log_level()>=1: debug_info(f"idnex: {index_table_size_0}" )
-            index_stmt += f"({dyn_arg_name_0}/{str(self.range_div_factor)} * {str(index_table_size_0)} + {dyn_arg_name_1}/{str(self.range_div_factor)}) > {str(index_len)} ? {str(index_len)} : ({dyn_arg_name_0}/{str(self.range_div_factor)} * {str(index_table_size_0)} + {dyn_arg_name_1}/{str(self.range_div_factor)});\n"
+            index_stmt += f"({dyn_arg_name_0}/{str(range_div_factor)} * {str(index_table_size_0)} + {dyn_arg_name_1}/{str(range_div_factor)}) > {str(index_len)} ? {str(index_len)} : ({dyn_arg_name_0}/{str(range_div_factor)} * {str(index_table_size_0)} + {dyn_arg_name_1}/{str(range_div_factor)});\n"
             i = 0
             for range_tuple, best_cp_result in ranges_best_result:
                 for _ in range(
-                    range_tuple[0].start, range_tuple[0].end + 1, self.range_div_factor
+                    range_tuple[0].start, range_tuple[0].end + 1, range_div_factor
                 ):
                     for _ in range(
                         range_tuple[1].start,
                         range_tuple[1].end + 1,
-                        self.range_div_factor,
+                        range_div_factor,
                     ):
                         index_table.append(i)
                 i += 1
@@ -257,7 +254,7 @@ class Engine:  # pylint: disable=too-few-public-methods
         # 用于存储每个config对应的range和compile_result
         config_to_ranges_and_results = {}
         for range_tuple, best_cr in best_compile_results.items():
-            debug_info(f"{range_tuple}")
+            # debug_info(f"{range_tuple}")
             config = best_cr.config
             # 如果config尚未存在于映射中，则初始化一个新的键值对
             if config not in config_to_ranges_and_results.keys():

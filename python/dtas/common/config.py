@@ -377,16 +377,17 @@ class GEMVConfig(Config):
 class ReductionConfig(Config):
     def __init__(self) -> None:
         self.config_kind = "ReductionConfig"
+        self.bx = 1000
         self.len_tx = 128 
         self.unroll_depth = 256
         self.vector_size = 4
         self.temp_storage = "shared.dyn"
         # self.temp_storage = "local"
         self.max_active_blocks_per_sm = 0
-        # self.temp_storage = "local"
 
     def to_dict(self) -> Dict:
         dic = {}
+        dic["bx"] = self.bx
         dic["len_tx"] = self.len_tx
         dic["unroll_depth"] = self.unroll_depth
         dic["vector_size"] = self.vector_size

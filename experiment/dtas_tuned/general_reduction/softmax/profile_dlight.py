@@ -69,25 +69,26 @@ with target:
 # # print(mod)
 mod = rx.transform.AttachGlobalSymbol()(mod)
 rt_mod = tvm.build(mod, target=target)
-timer = rt_mod.time_evaluator(func_name="fused_softmax_cast", dev=dev, number=10,  min_repeat_ms=50 )
+timer = rt_mod.time_evaluator(func_name="fused_softmax_cast", dev=dev, number=1,  min_repeat_ms=50 )
 result={}
 
 import json
-for n in range(1, 4097):
+for n in range(4096, 4097):
     x = tvm.nd.array(np.random.uniform(0, 1, (1, 1000, n)).astype("float32"), dev)
     z = tvm.nd.array(np.random.uniform(0, 1, (1, 1000, n)).astype("float16"), dev)
     time = timer(x, z).mean
+    print(timer(x, z))
     result[n] = time * 1e6
     # print(f"bandwidth: {bandwidth} GB/S" )
     del x, z
     
-def save_to_json(profile, filename):
-    import json
-    with open(filename, "w") as f:
-        f.write(json.dumps(profile, indent=4))
+# def save_to_json(profile, filename):
+#     import json
+#     with open(filename, "w") as f:
+#         f.write(json.dumps(profile, indent=4))
 
 
-save_to_json(
-    result,
-    f"/home/weitao/XIAG8XX/profile/dtas_tuned/general_reduction/softmax/dlight/latency.json",
-)   
+# save_to_json(
+#     result,
+#     f"/home/weitao/XIAG8XX/profile/dtas_tuned/general_reduction/softmax/dlight/latency.json",
+# )   

@@ -8,6 +8,7 @@ import numpy as np
 
 from tvm import tir
 from tvm.tir.schedule import Schedule
+from tvm.runtime import DataType
 
 from .tir_base import TIRSchedulerBase
 from ..common.analisys import *
@@ -27,8 +28,10 @@ def save_ir(filename, sch):
 
 class TIRReductionScheduler(TIRSchedulerBase):
     def _index_map_func(self, *index_list):
+        in_bytes = (DataType(self.func_info.in_dtype).bits + 7) // 8
+        assert in_bytes == 4 or in_bytes == 2, f"Unsupported in_bytes: {in_bytes}"
         j = index_list[-1]
-        return index_list[:-1] + (j // 64, j % 64)
+        return index_list[:-1] + (j // (128 // in_bytes), j % (128 // in_bytes))
 
     def apply_config(self, config: ReductionConfig) -> Optional[Schedule]:
         # TODO tvm 的 simplify 有待改进, 
@@ -43,8 +46,13 @@ class TIRReductionScheduler(TIRSchedulerBase):
             loops = sch.get_loops(blocks[-1])
             # sch.pad_einsum(blocks[0], [1, 1, 1024])
             bx = sch.fuse(*loops[: self.func_info.num_leading_s])
+            # debug_info(f"bx: {sch.get(bx).extent}")
+            # grid_x, bx= sch.split(bx, [None, config.bx])
+            # debug_info(f"config.bx: {config.bx}")
+            bx, grid_x= sch.split(bx, [config.bx, None])
+            # sch.reorder(bx, grid_x)
             r_loop, tx = sch.split(loops[-1], [None, config.len_tx])
-            sch.reorder(tx, r_loop)
+            sch.reorder(bx, tx, grid_x, r_loop)
             sch.bind(bx, "blockIdx.x")
             sch.bind(tx, "threadIdx.x")
             sch.annotate(
@@ -56,7 +64,7 @@ class TIRReductionScheduler(TIRSchedulerBase):
             for block in reversed(blocks[:-1]):
                 for i, _ in enumerate(sch.get(block).writes):
                     sch.set_scope(block, buffer_index=i, storage_scope="shared")
-                sch.compute_at(block, bx, preserve_unit_loops=True)
+                sch.compute_at(block, grid_x, preserve_unit_loops=True)
                 r_loop = sch.fuse(
                     *sch.get_loops(block)[-self.func_info.num_trailing_r :]
                 )
@@ -69,12 +77,17 @@ class TIRReductionScheduler(TIRSchedulerBase):
                     ann_val=config.unroll_depth,
                 )
                 sch.annotate(r_loop, ann_key="pragma_unroll_explicit", ann_val=1)
-            if config.temp_storage in ["shared.dyn"]:
+            if config.temp_storage in ["shared.dyn", "local"]:
                 SS = sch.cache_read(blocks[0], 0, config.temp_storage)
                 # if config.temp_storage == "shared.dyn":
-                    # sch.transform_layout(SS, ("write", 0), self._index_map_func,pad_value = 0.0)
-                #     sch.storage_align(SS, 0, -2, 16, 8)
-                sch.compute_at(SS, bx, preserve_unit_loops=True)
+                #     sch.transform_layout(SS, ("write", 0), self._index_map_func, pad_value = 0.0)
+                #     if self.func_info.in_dtype == "float16":
+                #         debug_info(f"storage_align: float16")
+                #         sch.storage_align(SS, 0, -2, 16, 4)
+                #     elif self.func_info.in_dtype == "float32":
+                #         debug_info(f"storage_align: float32")
+                #         sch.storage_align(SS, 0, -2, 16, 4)
+                sch.compute_at(SS, grid_x, preserve_unit_loops=True)
                 if not self.func_info.dyn_red:
                     sch.annotate(SS, "tir.manifest_shared_memory_local_stage", 1)
                 auto_inline_producers(sch, SS)
@@ -86,6 +99,10 @@ class TIRReductionScheduler(TIRSchedulerBase):
                 # sch.reorder(tx, r_loop, vec)
                 sch.bind(tx, "threadIdx.x")
                 sch.vectorize(vec)
+            # save_to_file(
+            #     f"/home/weitao/XIAG8XX/layernorm/{config.len_tx}_{config.temp_storage}_in{config.vector_size}.py",
+            #     sch,
+            # )
             return sch
         else:
             if self.func_info.is_inner_reduction:
