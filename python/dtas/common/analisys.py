@@ -773,7 +773,7 @@ def normalize_general_reduction(sch: tir.Schedule, block_infos: List[BlockInfo])
             rows *= sch.get(loop).extent.value
     # rows = sch.get(sch.fuse(*loops[: num_leading_s])).extent.value
     debug_info(f"rows:{rows}")
-    # debug_info(f"num_leading_s:{num_leading_s},num_trailing_r:{num_trailing_r}")
+    debug_info(f"num_leading_s:{num_leading_s},num_trailing_r:{num_trailing_r}")
     try:
     # TODO: fix num_leading_s = 0 case
         assert num_trailing_r > 0, "num_trailing_r > 0"

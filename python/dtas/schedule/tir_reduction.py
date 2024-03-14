@@ -44,16 +44,13 @@ class TIRReductionScheduler(TIRSchedulerBase):
         blocks = sch.get_child_blocks(root_block)
         if self.func_info.general_red:
             loops = sch.get_loops(blocks[-1])
-            # sch.pad_einsum(blocks[0], [1, 1, 1024])
             bx = sch.fuse(*loops[: self.func_info.num_leading_s])
-            # debug_info(f"bx: {sch.get(bx).extent}")
-            # grid_x, bx= sch.split(bx, [None, config.bx])
-            # debug_info(f"config.bx: {config.bx}")
-            bx, grid_x= sch.split(bx, [config.bx, None])
-            # sch.reorder(bx, grid_x)
-            r_loop, tx = sch.split(loops[-1], [None, config.len_tx])
-            sch.reorder(bx, tx, grid_x, r_loop)
+            assert (config.bx == None and config.bx_factor != None) or (config.bx != None and config.bx_factor == None)
+            bx, _= sch.split(bx, [config.bx, config.bx_factor])
+            r_loop, tx = sch.split(sch.fuse(*loops[-self.func_info.num_trailing_r:]), [None, config.len_tx])
+            sch.reorder(tx, r_loop)
             sch.bind(bx, "blockIdx.x")
+            # sch.bind(ty, "threadIdx.y")
             sch.bind(tx, "threadIdx.x")
             sch.annotate(
                 r_loop,
@@ -61,10 +58,11 @@ class TIRReductionScheduler(TIRSchedulerBase):
                 ann_val=config.unroll_depth,
             )
             sch.annotate(r_loop, ann_key="pragma_unroll_explicit", ann_val=1)
-            for block in reversed(blocks[:-1]):
+            
+            for block in reversed(blocks[:-self.func_info.num_trailing_r]):
                 for i, _ in enumerate(sch.get(block).writes):
                     sch.set_scope(block, buffer_index=i, storage_scope="shared")
-                sch.compute_at(block, grid_x, preserve_unit_loops=True)
+                sch.compute_at(block, bx, preserve_unit_loops=False)
                 r_loop = sch.fuse(
                     *sch.get_loops(block)[-self.func_info.num_trailing_r :]
                 )
@@ -77,6 +75,7 @@ class TIRReductionScheduler(TIRSchedulerBase):
                     ann_val=config.unroll_depth,
                 )
                 sch.annotate(r_loop, ann_key="pragma_unroll_explicit", ann_val=1)
+
             if config.temp_storage in ["shared.dyn", "local"]:
                 SS = sch.cache_read(blocks[0], 0, config.temp_storage)
                 # if config.temp_storage == "shared.dyn":
@@ -87,20 +86,20 @@ class TIRReductionScheduler(TIRSchedulerBase):
                 #     elif self.func_info.in_dtype == "float32":
                 #         debug_info(f"storage_align: float32")
                 #         sch.storage_align(SS, 0, -2, 16, 4)
-                sch.compute_at(SS, grid_x, preserve_unit_loops=True)
+                sch.compute_at(SS, bx, preserve_unit_loops=True)
                 if not self.func_info.dyn_red:
                     sch.annotate(SS, "tir.manifest_shared_memory_local_stage", 1)
                 auto_inline_producers(sch, SS)
-                r_loop = sch.get_loops(SS)[-1]
-                r_loop, tx, vec = sch.split(
-                    r_loop,
-                    [None, config.len_tx, config.vector_size],
+                col = sch.get_loops(SS)[-( 1 + self.func_info.num_trailing_r):]
+                _, tx, vec = sch.split(
+                    sch.fuse(*col),
+                    [None,  config.len_tx, config.vector_size],
                 )
                 # sch.reorder(tx, r_loop, vec)
                 sch.bind(tx, "threadIdx.x")
                 sch.vectorize(vec)
             # save_to_file(
-            #     f"/home/weitao/XIAG8XX/layernorm/{config.len_tx}_{config.temp_storage}_in{config.vector_size}.py",
+            #     f"/home/weitao/XIAG8XX/layernorm/7.py",
             #     sch,
             # )
             return sch

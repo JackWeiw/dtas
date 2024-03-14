@@ -13,6 +13,8 @@ from ..logging import get_log_level, debug_info
 
 class WMMAConfigEmiter(BaseConfigEmiter):
     def estimate_registers_usage(self, config: WMMAConfig):
+        # 当x=5, y=5 register overflow
+        # x=4, y=5 or x=5, y=4 register not overflow
         # 如果用softwarepipeline的话有不同的因素考虑,vectorize好像也是寄存器
          # https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-wmma
         if bytes == 2: # case dtype = "float16"
@@ -24,7 +26,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             outdtype .f32 C or D
             A vector expression of eight .f32 registers.
             '''
-        config.reg_usage = 1.2 * (
+        config.reg_usage = 2 * (
             config.micro_shape_x * config.wmma_m * config.wmma_k
             + config.micro_shape_y * config.wmma_n * config.wmma_k
             + config.micro_shape_x
@@ -37,7 +39,11 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         m = config.i * config.micro_shape_x * config.wmma_m
         n = config.j * config.micro_shape_y * config.wmma_n
         k = config.micro_shape_k * config.wmma_k
-        config.smem_usage = 2 * (m + n) * (k + pad_offset) * bytes
+        m_tile_bytes = 2 * m * (k + pad_offset) * bytes
+        n_tile_bytes = 2 * n * (k + pad_offset) * bytes
+        out_tile_bytes = m * n * bytes
+        smem = sorted([m_tile_bytes, n_tile_bytes, out_tile_bytes], reverse=True)
+        config.smem_usage = smem[0] + smem[1]
 
     def generate_tile_candidates(
         self,
@@ -147,6 +153,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         
         # TODO 如何考虑wave tail effect带来的影响
         if np.prod(config.grid_size) > wave_gpu and ab_total_size > self.arch.l2_cache_size:
+            config.type = 0
             '''
             大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数超过一个 wave 大小；
             '''
@@ -173,7 +180,8 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             )
             config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         elif ab_total_size > self.arch.l2_cache_size and np.prod(config.grid_size) <= wave_gpu:
-            if get_log_level()>=1:debug_info(f"中矩阵：{ab_total_size/1024/1024}MB, {np.prod(config.grid_size)}, wave_gpu:{wave_gpu}")
+            config.type = 1
+            # if get_log_level()>=1:debug_info(f"中矩阵：{ab_total_size/1024/1024}MB, {np.prod(config.grid_size)}, wave_gpu:{wave_gpu}")
             # 大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数不超过一个 wave 大小；
             a_ldg_request = np.prod(config.grid_size) * tile_size_m * K
             b_ldg_request = np.prod(config.grid_size) * tile_size_n * K
@@ -186,7 +194,8 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             )
             config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         elif ab_total_size <= self.arch.l2_cache_size :
-            if get_log_level()>=1:debug_info(f"小矩阵：{ab_total_size/1024/1024}MB")
+            config.type = 2
+            # if get_log_level()>=1:debug_info(f"小矩阵：{ab_total_size/1024/1024}MB")
             #小矩阵，即 M, N, K 较小,A, B 矩阵可以完全放进 L2 and Tile 总数超过一个 wave 大小；
             config.l2_hit_rate = 1
             config.p_ldg = self.arch.bandwidth[1]
@@ -214,7 +223,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
     def check_config_valid(self, config: WMMAConfig, bytes, pad_offset) -> bool:
         self.estimate_smem_usage(config, bytes, pad_offset)
         if config.smem_usage > self.arch.max_smem_per_block:
-            if get_log_level()>=1:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
+            # if get_log_level()>=1:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
             return False
         self.estimate_registers_usage(config)
         if config.reg_usage > self.arch.max_registers_per_block:
@@ -236,11 +245,11 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         if kind not in ["m", "n", "k", "s"]:
             raise ValueError(f"kind {kind} is not supported")
         if isinstance(gemm_extent_map[kind], tir.IntImm):
-            return gemm_extent_map[kind].value
+            return gemm_extent_map[kind].value, False
         else:
             for r in range_tuple:
                 if r.var.name == gemm_extent_map[kind].name:
-                    return r.start
+                    return r.end, True
     
     def generate_config_candidates(
         self, wmma_shape, range_tuple, topk=10
@@ -250,10 +259,10 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         in_pad = 8 if in_bytes == 2 else 16  # 8 for fp16, 16 for int8
         extent_map = self.func_info.gemm_extent_map
         
-        BSZ = self.get_extent(range_tuple, extent_map, "s")
-        M = self.get_extent(range_tuple, extent_map, "m")
-        N = self.get_extent(range_tuple, extent_map, "n")
-        K = self.get_extent(range_tuple, extent_map, "k")
+        BSZ, is_dyn_bsz = self.get_extent(range_tuple, extent_map, "s")
+        M, is_dyn_m = self.get_extent(range_tuple, extent_map, "m")
+        N, is_dyn_n = self.get_extent(range_tuple, extent_map, "n")
+        K, is_dyn_k = self.get_extent(range_tuple, extent_map, "k")
              
         # TODO currently set out pad_offset = 4
         out_pad = 4
@@ -310,5 +319,4 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             with open(file, 'w') as file:  
                 json.dump(configs_dict_list, file, indent=4)
         config_candidates = config_candidates[:topk] if len(config_candidates) >= topk else config_candidates
-        # save_config_candidates(f"/home/weitao/XIAG8XX/gemmconfigs/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
         return config_candidates[:topk] if len(config_candidates) >= topk else config_candidates

@@ -198,7 +198,8 @@ class CodeGenerator:
     return -1;
   }}
   return 0;
-}}     
+}}
+ 
     """.format(
             call_len_args
         )
@@ -299,8 +300,8 @@ class CodeGenerator:
                 ) = compile_result.get_code_and_kernel_info(self.target, range_tuple)
                 name = compile_result.name
                 self.kernel_info_dic.update(kernel_info)
-                # save_code(f"host_code_{i}.cc", host_code)
-                # save_code(f"device_code_{i}.cc", device_code)
+                # save_code(f"/home/weitao/XIAG8XX/profile/dtas_tuned/general_reduction/softmax/row_12800/top1_256_1/host_code_{i}.cc", host_code)
+                # save_code(f"/home/weitao/XIAG8XX/profile/dtas_tuned/general_reduction/softmax/row_12800/top1_256_1/device_code_{i}.cu", device_code)
                 if i == 0:
                     i += 1
                     self.host_forward_declares.append(self.get_host_forward_declare(host_code))
@@ -316,21 +317,17 @@ class CodeGenerator:
                     max_stack_tcode_stmts = stack_tcode_stmts
                     max_stack_value_stmts = stack_value_stmts
                     len_stack_value_stmts = len(stack_value_stmts)
-                    # stack_value_stmt = "".join(
-                    #     [
-                    #         stack_value_stmts[j]
-                    #         + "info.launch_args[{}];\n".format(j)
-                    #         + stack_tcode_stmts[j]
-                    #         for j in range(len(stack_value_stmts))
-                    #     ]
-                    # )
                 else:
+                    i += 1
                     (
                         stack_value_stmts,
                         stack_tcode_stmts,
                         launch_args,
                     ) = self.get_host_launch_args_str(host_code, len_args)    
                     if len(stack_value_stmts) > max_launch_args_len:
+                        host_main_body_partial = self.get_host_main_body_partial(
+                        host_code, len_args
+                        )
                         diff_launch_args_len = True
                         max_launch_args_len = len(stack_value_stmts)
                         max_stack_tcode_stmts = stack_tcode_stmts
@@ -363,8 +360,9 @@ class CodeGenerator:
                 stack_value_stmt += f"if (info.launch_args[{max_launch_args_len -1}] != -1){{\n" + max_stack_value_stmts[-1]+f"info.launch_args[{max_launch_args_len -1}];\n"+ max_stack_tcode_stmts[-1]+ "}\n"
                 for call_info in call_table_info:
                     if len(call_info[0]) < max_launch_args_len:
-                        call_info[0].append("-1")
-                    call_table_stmts.append('    {{' + ",".join(call_info[0]) + '}, ' + call_info[1] + '},\n')
+                        call_info[0].append(" (int64_t)-1")
+                    call_arg_str = ",".join(call_info[0])
+                    call_table_stmts.append('    {{' + call_arg_str + '}, ' + call_info[1] + '},\n')
             else:
                 stack_value_stmt = "".join([
                         max_stack_value_stmts[j]
@@ -374,7 +372,8 @@ class CodeGenerator:
                     ]
                 )
                 for call_info in call_table_info:
-                    call_table_stmts.append('    {' + call_info[0] + ', ' + call_info[1] + '},\n')
+                    call_arg_str = ",".join(call_info[0])
+                    call_table_stmts.append('    {{' + call_arg_str + '}, ' + call_info[1] + '},\n')
 
             index_table_stmt = (
                 "  int64_t index_table[] = {"
@@ -389,7 +388,7 @@ class CodeGenerator:
             if not diff_launch_args_len:
                 host_func_call_stmts = self.get_host_func_call_stmts(call_args_len)
             else:
-                call_args_len = f"info.launch_args[{max_launch_args_len-1}]==-1?{call_args_len-1}:{call_args_len}"
+                call_args_len = f"info.launch_args[{max_launch_args_len-1}]==(int64_t)-1?{call_args_len-1}:{call_args_len}"
                 debug_info(f"call_args_len: {call_args_len}")
                 host_func_call_stmts = self.get_host_func_call_stmts(call_args_len)
             

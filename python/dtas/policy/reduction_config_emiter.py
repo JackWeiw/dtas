@@ -36,7 +36,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         if self.arch.platform == "CUDA":
             return 256
 
-    def get_num_blocks(self, config:ReductionConfig, max_blocks, max_smem_usage, waves = 32):
+    def get_num_blocks(self, config:ReductionConfig, row_range: Range, max_smem_usage, use_shared = True, waves = 32):
         """
         n: The number of the elements.
         sm_count: The number of the SM.
@@ -46,20 +46,35 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         so each block can have 64 * 1024 / 255 = 256 threads for elementwise
         note. this is relatively loose limit, since we assume each thread reach the most register usage
         """
-        config.max_active_blocks_per_sm = min(
-            self.arch.max_resident_threads_per_sm // config.len_tx,
-            self.arch.max_smem_per_sm // max_smem_usage,
-            self.arch.max_resident_blocks_per_sm,
-                )
-        config.bx = max(
-            1,
-            min(
-                max_blocks,
-                self.arch.num_sm * config.max_active_blocks_per_sm * waves,
-            ),
-        )
+        if use_shared:
+            config.max_active_blocks_per_sm = min(
+                self.arch.max_resident_threads_per_sm // config.len_tx,
+                self.arch.max_smem_per_sm // max_smem_usage,
+                self.arch.max_resident_blocks_per_sm,
+                    )
+        else:
+            config.max_active_blocks_per_sm = min(
+                self.arch.max_resident_threads_per_sm // config.len_tx,
+                self.arch.max_resident_blocks_per_sm,
+            )
+        max_blocks = self.arch.num_sm * config.max_active_blocks_per_sm * waves
+        if max_blocks >= row_range.start :
+            config.bx_factor = 1
+            config.bx = None
+        else:
+            config.bx = max(1, max_blocks)
+            config.bx_factor = None
+            
+        # else:
+        # config.bx = max(
+        #     1,
+        #     min(
+        #         max_blocks,
+        #         self.arch.num_sm * config.max_active_blocks_per_sm * waves,
+        #     ),
+        # )
 
-    def generate_config_candidates(self, re_range: Range, rows:int, in_bytes:int, is_dynamic_reduction = False, topk=20):
+    def generate_config_candidates(self, re_range: Range, row_range:Range, in_bytes:int, is_dynamic_reduction = False, topk=20):
         kNumWaves = 32
         max_smem_usage = (re_range.end + 2) * in_bytes
         # debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
@@ -84,7 +99,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
             config.unroll_depth = unroll_depth
             config.temp_storage = temp_storage
             config.len_tx = block_size
-            self.get_num_blocks(config, rows, max_smem_usage, kNumWaves)
+            self.get_num_blocks(config, row_range, max_smem_usage, temp_storage=="shared.dyn",kNumWaves)
             if vec_candidate is not None:
                 config.vector_size = vec_candidate
             config_list.append(config)
@@ -116,28 +131,33 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         rows = self.func_info.rows
         is_dynamic_reduction = self.func_info.dyn_red
         re_range = None
+        row_range = None
         if is_dynamic_reduction:
             for r in range_tuple:
                 if r.var.name == re_len.name:
                     re_range = r
                 else:
-                    rows *= r.end
+                    if row_range == None:
+                        row_range = Range("row_range", r.start*rows, r.end*rows)
+                    else:
+                        row_range.start *= r.start
+                        row_range.end *= r.end
+                    # rows *= r.end
             if re_range is None:
                 raise ValueError("reduction_len is dynamic, but  can't find reduction range info in range_tuple")
         else:
             re_range = Range(tir.Var("re_len","int32"), re_len, re_len)
             for r in range_tuple:
-                rows *= r.end
-
+                if row_range == None:
+                    row_range = Range("row_range", r.start*rows, r.end*rows)
+                else:
+                    row_range.start *= r.start
+                    row_range.end *= r.end
+        if row_range == None:
+            row_range = Range("row_range", rows, rows)
         in_bytes = (DataType(self.func_info.in_dtype).bits+7) // 8
         # if get_log_level() >= 1: debug_info(f"re_range: {re_range}, in_bytes: {in_bytes}")
         config_candidates = self.generate_config_candidates(
-            re_range, rows, in_bytes, is_dynamic_reduction, topk
+            re_range, row_range, in_bytes, is_dynamic_reduction, topk
         )
-        # def save_config_candidates(file, config_candidates):
-        #     import json
-        #     configs_dict_list = [cf.to_dict() for cf in config_candidates] 
-        #     with open(file, 'w') as file:  
-        #         json.dump(configs_dict_list, file, indent=4)
-        # save_config_candidates(f"/home/weitao/XIAG8XX/configs/softmax/{range_tuple[0].to_suffix()}top{topk}.json", config_candidates)
         return config_candidates
