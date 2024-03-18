@@ -13,27 +13,23 @@ from ..logging import get_log_level, debug_info
 
 class WMMAConfigEmiter(BaseConfigEmiter):
     def estimate_registers_usage(self, config: WMMAConfig):
+        # 由于micro_k 都取4 for float16, 所以wmma_load, wmma_sync unroll 都是4*2=8倍
+        # wmma_load 需要9个 b32寄存器, wmma_load a 为micro_x, b 为micro_y
+        # mma_sync 需要8个 b32寄存器, mma_sync为micro_x * micro_y
+        # wmma_store 需要
         # 当x=5, y=5 register overflow
         # x=4, y=5 or x=5, y=4 register not overflow
         # 如果用softwarepipeline的话有不同的因素考虑,vectorize好像也是寄存器
-         # https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-wmma
-        if bytes == 2: # case dtype = "float16"
-            '''
+        # https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-wmma
+        '''
             indtype .f16 A or B
             A vector expression of eight .f16x2 registers.
             outdtype .f16 C or D
             A vector expression of four .f16x2 registers.
             outdtype .f32 C or D
             A vector expression of eight .f32 registers.
-            '''
-        config.reg_usage = 2 * (
-            config.micro_shape_x * config.wmma_m * config.wmma_k
-            + config.micro_shape_y * config.wmma_n * config.wmma_k
-            + config.micro_shape_x
-            * config.micro_shape_y
-            * config.wmma_m
-            * config.wmma_n
-        )
+        '''
+        config.reg_usage = 2 * ( config.micro_shape_x * config.wmma_m  + config.micro_shape_y * config.wmma_n + config.micro_shape_x* config.micro_shape_y* config.wmma_m * config.wmma_n)  / 32
 
     def estimate_smem_usage(self, config: WMMAConfig, bytes, pad_offset):
         m = config.i * config.micro_shape_x * config.wmma_m
@@ -42,8 +38,13 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         m_tile_bytes = 2 * m * (k + pad_offset) * bytes
         n_tile_bytes = 2 * n * (k + pad_offset) * bytes
         out_tile_bytes = m * n * bytes
-        smem = sorted([m_tile_bytes, n_tile_bytes, out_tile_bytes], reverse=True)
-        config.smem_usage = smem[0] + smem[1]
+        if any([m_tile_bytes >= out_tile_bytes, n_tile_bytes >= out_tile_bytes]):
+            config.smem_usage = m_tile_bytes + n_tile_bytes
+        else:
+            config.smem_usage = min(m_tile_bytes, n_tile_bytes) + out_tile_bytes
+        # 
+        # smem = sorted([m_tile_bytes, n_tile_bytes, out_tile_bytes], reverse=True)
+        # config.smem_usage = smem[0] + smem[1]
 
     def generate_tile_candidates(
         self,
@@ -56,7 +57,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         # i*j < max_threads_per_block / warp_size=1024/32=32
         # i_j_candidates = [i for i in range(1, (max_threads_per_block // warp_size) + 1)]
         i_j_candidates = [i for i in range(1, 32)]
-        i_j_micro_candidates = [i_micro for i_micro in range(1, 32)]
+        i_j_micro_candidates = [i_micro for i_micro in range(1, 10)]
         # To ensure that the SMEM kdim has num_elemeny*dtype= 128 Bytes
         # 128为chunk_size
         k_facotr = [128 // (wmma_shape[2] * bytes)]
@@ -103,11 +104,15 @@ class WMMAConfigEmiter(BaseConfigEmiter):
                 return vec
         return valid_vec_load_lens[0]
 
-    def compute_config_statistics(self, BSZ:int, M:int, N:int, K:int, in_bytes:int, config: WMMAConfig):
+    def compute_config_statistics(self, gemm_extent_info, in_bytes:int, config: WMMAConfig):
         """
         需要的数据tile_size_m,tile_size_n
         tile总数,wave大小
         """
+        BSZ, is_dyn_bsz = gemm_extent_info["bsz"]
+        M, is_dyn_m = gemm_extent_info["m"]
+        N, is_dyn_n = gemm_extent_info["n"]
+        K, is_dyn_k = gemm_extent_info["k"]
         config.max_active_block_per_SM = int(
             min(
                 self.arch.max_smem_per_sm // max(config.smem_usage, 1),
@@ -208,10 +213,17 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             config.performance = self.arch.processing_power[3] * 1e12
             
         ffma = config.micro_shape_x*config.wmma_m*config.micro_shape_y*config.wmma_n*config.micro_shape_k*config.wmma_k*2
-        lds = (config.micro_shape_x*config.wmma_m+config.micro_shape_y*config.wmma_n)*(config.micro_shape_k*config.wmma_k)
+        lds = (config.micro_shape_x*config.wmma_m+config.micro_shape_y*config.wmma_n)*(config.micro_shape_k*config.wmma_k) * in_bytes
         config.micro_performance = ffma / lds
         
         # the small the better
+        config.static_shape_align = True 
+        if not is_dyn_m:
+            config.static_shape_align &= M % tile_size_m == 0
+        if not is_dyn_n:
+            config.static_shape_align &= N % tile_size_n == 0
+        if not is_dyn_k:
+            config.static_shape_align &= K % tile_size_k == 0
         config.assign_score = 0
         if M % tile_size_m != 0:
             config.assign_score += tile_size_m - M % tile_size_m
@@ -223,17 +235,18 @@ class WMMAConfigEmiter(BaseConfigEmiter):
     def check_config_valid(self, config: WMMAConfig, bytes, pad_offset) -> bool:
         self.estimate_smem_usage(config, bytes, pad_offset)
         if config.smem_usage > self.arch.max_smem_per_block:
-            # if get_log_level()>=1:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
+            if get_log_level()>=1:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
             return False
         self.estimate_registers_usage(config)
-        if config.reg_usage > self.arch.max_registers_per_block:
-            if get_log_level()>=1:debug_info(f"reg usage {config.reg_usage} exceeds {self.arch.max_registers_per_block}")
+        if config.reg_usage > self.arch.max_registers_per_thread:
+            if get_log_level()>=1:debug_info(f"reg usage {config.reg_usage} exceeds {self.arch.max_registers_per_thread}")
             return False
         return True
 
     def score_config(self, config: WMMAConfig):
-        return (config.performance, config.micro_performance, -config.assign_score)
-
+        return (config.static_shape_align, config.performance, config.micro_performance, -config.assign_score)
+        # return (config.static_shape_align, config.micro_performance, config.performance, -config.assign_score)
+        
     def get_max_tile_size(self, bytes, in_pad, stages: int):
         # return upperbound of tile_m+tile_n
         # note shared memory usage is equal to (tile_m + tile_n)*(tile_k + in_pad) * bytes * 2 (if use double buffer,stages=2)
@@ -245,11 +258,11 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         if kind not in ["m", "n", "k", "s"]:
             raise ValueError(f"kind {kind} is not supported")
         if isinstance(gemm_extent_map[kind], tir.IntImm):
-            return gemm_extent_map[kind].value, False
+            return (gemm_extent_map[kind].value, False)
         else:
             for r in range_tuple:
                 if r.var.name == gemm_extent_map[kind].name:
-                    return r.end, True
+                    return (r.end, True)
     
     def generate_config_candidates(
         self, wmma_shape, range_tuple, topk=10
@@ -259,6 +272,11 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         in_pad = 8 if in_bytes == 2 else 16  # 8 for fp16, 16 for int8
         extent_map = self.func_info.gemm_extent_map
         
+        gemm_extent_info = {}
+        gemm_extent_info["bsz"] = self.get_extent(range_tuple, extent_map, "s")
+        gemm_extent_info["m"] = self.get_extent(range_tuple, extent_map, "m")
+        gemm_extent_info["n"] = self.get_extent(range_tuple, extent_map, "n")
+        gemm_extent_info["k"] = self.get_extent(range_tuple, extent_map, "k")
         BSZ, is_dyn_bsz = self.get_extent(range_tuple, extent_map, "s")
         M, is_dyn_m = self.get_extent(range_tuple, extent_map, "m")
         N, is_dyn_n = self.get_extent(range_tuple, extent_map, "n")
@@ -288,9 +306,8 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             config.micro_shape_x = tile_candidate[2]
             config.micro_shape_y = tile_candidate[3]
             config.micro_shape_k = tile_candidate[4]
-            
             if self.check_config_valid(config, in_bytes, in_pad):
-                self.compute_config_statistics(BSZ, M, N, K, in_bytes, config)
+                self.compute_config_statistics(gemm_extent_info, in_bytes, config)
                 config.in_vec_len_a = self.plan_vectorize(config.tile_size_m, config.tile_size_k, in_bytes)
                 config.in_vec_len_b = self.plan_vectorize(config.tile_size_n, config.tile_size_k, in_bytes)
                 config.out_vec_len = self.plan_vectorize(config.tile_size_m, config.tile_size_n, in_bytes)

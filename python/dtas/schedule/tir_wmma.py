@@ -14,8 +14,6 @@ from ..common.utils import (
 from ..intrin.wmma_intrin import get_wmma_intrin_group_diy
 from ..common.config import WMMAConfig
 from ..logging import get_log_level, debug_info
-# with open(filename, "w") as f:
-#     f.write(sch.mod.script())
 
 
 class TIRWMMAScheduler(TIRSchedulerBase):
@@ -25,13 +23,10 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         blocks = sch.get_child_blocks(root_block)
         reduction_blocks = get_reduction_blocks(sch, blocks)
         main_block = reduction_blocks[0]
-        # block_stmt = sch.get(main_block)
-        # main_block = self.func_info.main_block
 
-        y_kernel_size = config.j * config.micro_shape_y * config.wmma_m
-        x_kernel_size = config.i * config.micro_shape_x * config.wmma_n
+        x_kernel_size = config.i * config.micro_shape_x * config.wmma_m
+        y_kernel_size = config.j * config.micro_shape_y * config.wmma_n
         k_kernel_size = config.micro_shape_k * config.wmma_k
-        # k_kernel_size = config.micro_shape_k * config.wmma_k
         sch.pad_einsum(
             main_block,
             [1, x_kernel_size, y_kernel_size, k_kernel_size],
@@ -73,22 +68,6 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         sch.annotate(k0, "software_pipeline_order", [0, 3, 1, 4, 5, 2, 6])
         sch.annotate(k1, "software_pipeline_stage", [0, 0, 1])
         sch.annotate(k1, "software_pipeline_order", [0, 1, 2])
-            # elif (
-            #     config.use_async_copy
-            #     and not config.manifest_shared_memory_local_stage
-            # ):
-            #     sch.annotate(k0, "software_pipeline_stage", [0, 0, 1, 1, 1])
-            #     sch.annotate(k0, "software_pipeline_order", [0, 1, 2, 3, 4])
-            #     sch.annotate(k0, "software_pipeline_async_stages", [0])
-            #     # sch.annotate(k0, "software_pipeline_stage", [0, 0, 1])
-            #     # sch.annotate(k0, "software_pipeline_order", [0, 1, 2])
-            #     # sch.annotate(k0, "software_pipeline_stage", [0, 0, 1, 1, 2])
-            #     # sch.annotate(k0, "software_pipeline_order", [0, 1, 2, 3, 4])
-            #     sch.annotate(k1, "software_pipeline_stage", [0, 0, 1])
-            #     sch.annotate(k1, "software_pipeline_order", [0, 1, 2])
-            # if config.use_async_copy:
-
-            ## inner wmma software pipeline
 
         ## n/15/16,2560/8/16,10240/12/16,4,5,2,6,3,2
         sch.reorder(i0, j0, i1, j1, j2, i2, k0, k1, i3, j3)
@@ -119,7 +98,6 @@ class TIRWMMAScheduler(TIRSchedulerBase):
 
         AS = sch.cache_read(block_outer, 0, "shared.dyn")
         BS = sch.cache_read(block_outer, 1, "shared.dyn")
-
         sch.compute_at(AS, k0, preserve_unit_loops=True)
         sch.compute_at(BS, k0, preserve_unit_loops=True)
         # 如果访问的stride是4byte的奇数倍就bank-8conflict free
@@ -146,7 +124,6 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         # create read cache to load matrix from shared memory to wmma fragments
         A_mat = sch.cache_read(block_outer, 0, "wmma.matrix_a")
         B_mat = sch.cache_read(block_outer, 1, "wmma.matrix_b")
-
         sch.compute_at(A_mat, k1)
         sch.compute_at(B_mat, k1)
 
@@ -178,7 +155,6 @@ class TIRWMMAScheduler(TIRSchedulerBase):
             sch.reorder(i0, j0, i1, j1)
             sch.unroll(i0)
             sch.unroll(j0)
-            # save_to_file("/home/weitao/XIAG8XX/profile/IR/before_loada.py",sch)
             sch.tensorize(i1, intrin_group["load_a"])
             # Schedule for  wmma_matrix_b load
             i, j = sch.get_loops(B_mat)[-2:]
@@ -189,7 +165,7 @@ class TIRWMMAScheduler(TIRSchedulerBase):
             sch.unroll(j0)
             sch.tensorize(i1, intrin_group["load_b"])
         except:  # pylint: disable=bare-except
-            if get_log_level()>=2: debug_info("failed to tensorize load")
+            if get_log_level()>=1: debug_info("failed to tensorize load")
             return None
 
         # create write cache to store matrix from wmma fragments to shared memory and global memory
