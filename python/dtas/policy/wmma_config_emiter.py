@@ -42,10 +42,33 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             config.smem_usage = m_tile_bytes + n_tile_bytes
         else:
             config.smem_usage = min(m_tile_bytes, n_tile_bytes) + out_tile_bytes
-        # 
-        # smem = sorted([m_tile_bytes, n_tile_bytes, out_tile_bytes], reverse=True)
-        # config.smem_usage = smem[0] + smem[1]
 
+    def check_config_valid(self, config: WMMAConfig, bytes, pad_offset) -> bool:
+        self.estimate_smem_usage(config, bytes, pad_offset)
+        if config.smem_usage > self.arch.max_smem_per_block:
+            if get_log_level()>=2:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
+            return False
+        self.estimate_registers_usage(config)
+        if config.reg_usage > self.arch.max_registers_per_thread :
+            if get_log_level()>=2:debug_info(f"reg usage {config.reg_usage} exceeds {self.arch.max_registers_per_thread}")
+            return False
+        config.block_size = [1, config.i * config.j, config.warp_size]
+        if config.reg_usage > (self.arch.max_registers_per_block // np.prod(config.block_size)):
+            if get_log_level()>=2:debug_info(f"reg usage {config.reg_usage} exceeds {self.arch.max_registers_per_thread} max_launch_bounds")
+            return False
+        config.max_active_block_per_SM = int(
+            min(
+                self.arch.max_smem_per_sm // max(config.smem_usage, 1),
+                self.arch.max_registers_per_thread // max(config.reg_usage, 1),
+                self.arch.max_resident_threads_per_sm
+                // (config.i * config.j * config.warp_size),
+            )
+        )
+        if config.max_active_block_per_SM != 1:
+            if get_log_level()>=2:debug_info(f"max_active_block_per_SM {cconfig.max_active_block_per_SM} != 1")
+            return False
+        return True
+    
     def generate_tile_candidates(
         self,
         wmma_shape,
@@ -57,7 +80,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         # i*j < max_threads_per_block / warp_size=1024/32=32
         # i_j_candidates = [i for i in range(1, (max_threads_per_block // warp_size) + 1)]
         i_j_candidates = [i for i in range(1, 32)]
-        i_j_micro_candidates = [i_micro for i_micro in range(1, 10)]
+        i_j_micro_candidates = [i_micro for i_micro in range(2, 10)]
         # To ensure that the SMEM kdim has num_elemeny*dtype= 128 Bytes
         # 128为chunk_size
         k_facotr = [128 // (wmma_shape[2] * bytes)]
@@ -70,7 +93,9 @@ class WMMAConfigEmiter(BaseConfigEmiter):
                 k_facotr,
             )
         )
-
+        def is_power_of_2(n):
+            return n > 0 and (n & (n - 1)) == 0
+        
         # 产生block_tile and warp_tile candidates
         # 保证tile_k是128bytes，为刚好32个bank
         return list(
@@ -79,6 +104,7 @@ class WMMAConfigEmiter(BaseConfigEmiter):
                 and item[1] * item[3] % 2 ==0
                 and item[0] * item[1] >= 4
                 and item[0] * item[1] <= (max_threads_per_block // warp_size)
+                and is_power_of_2(item[0] * item[1])
                 and (
                     item[0] * item[2] * wmma_shape[0]
                     + item[1] * item[3] * wmma_shape[1]
@@ -104,6 +130,21 @@ class WMMAConfigEmiter(BaseConfigEmiter):
                 return vec
         return valid_vec_load_lens[0]
 
+    def set_swizzle_factor(self, N, K, tile_size_m, tile_size_n, in_bytes, config: WMMAConfig):
+        l2_size = self.arch.l2_cache_size
+        if l2_size != 0 :
+            # div by 3: suppose the two inputs and the output uses the same amount of l2
+            swizzle_factor = l2_size / K / in_bytes / (tile_size_n + tile_size_m)
+            # optimization: try find the best swizzle factor (aka the least additional padding)
+                block_cnt = math.ceil(int(N) / tile_size_n)
+                swizzle_factor = math.ceil(block_cnt / math.ceil(block_cnt / swizzle_factor))
+            else:
+                swizzle_factor = math.floor(swizzle_factor)
+            return swizzle_factor
+        else:
+            return [4, None]
+        return 1
+    
     def compute_config_statistics(self, gemm_extent_info, in_bytes:int, config: WMMAConfig):
         """
         需要的数据tile_size_m,tile_size_n
@@ -113,14 +154,6 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         M, is_dyn_m = gemm_extent_info["m"]
         N, is_dyn_n = gemm_extent_info["n"]
         K, is_dyn_k = gemm_extent_info["k"]
-        config.max_active_block_per_SM = int(
-            min(
-                self.arch.max_smem_per_sm // max(config.smem_usage, 1),
-                self.arch.max_registers_per_sm // max(config.reg_usage, 1),
-                self.arch.max_resident_threads_per_sm
-                // (config.i * config.j * config.warp_size),
-            )
-        )
 
         """
         首先说明 wave 的概念:wave 表示 GPU 上同时执行的 thread block。
@@ -134,15 +167,6 @@ class WMMAConfigEmiter(BaseConfigEmiter):
             (N + config.j * config.micro_shape_y * config.wmma_n - 1)
             // (config.j * config.micro_shape_y * config.wmma_n),
         ]
-        config.block_size = [1, config.i * config.j, config.warp_size]
-
-        #一共有几个wave
-        config.num_wave = (
-            np.prod(config.grid_size)
-            + (config.max_active_block_per_SM * self.arch.compute_max_core)
-            - 1
-        ) // max((config.max_active_block_per_SM * self.arch.compute_max_core), 1)
-
         tile_size_m = config.i * config.micro_shape_x * config.wmma_m
         tile_size_n = config.j * config.micro_shape_y * config.wmma_n
         tile_size_k = config.micro_shape_k * config.wmma_k
@@ -152,65 +176,67 @@ class WMMAConfigEmiter(BaseConfigEmiter):
 
         ab_total_size = (M + N) * K * in_bytes
         wave_gpu = config.max_active_block_per_SM * self.arch.num_sm #一个wave有多少个block
+        config.num_wave = int((np.prod(config.grid_size) + wave_gpu - 1) // wave_gpu) # 有多少个wave
         config.fma_ldg_ratio = (tile_size_m * tile_size_n * 2) / (
                 (tile_size_m + tile_size_n) * in_bytes
             )
         
-        # TODO 如何考虑wave tail effect带来的影响
-        if np.prod(config.grid_size) > wave_gpu and ab_total_size > self.arch.l2_cache_size:
-            config.type = 0
-            '''
-            大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数超过一个 wave 大小；
-            '''
-            # jisuanliang = tile_size_m * tile_size_n * K *2 (乘加)
-            # fancunliang = (tile_size_m + tile_size_n) * K * (DataType(self.func_info.in_dtype).bits+7//8)
-            # wave访存请求量
-            a_ldg_request = wave_gpu * tile_size_m * K
-            b_ldg_request = wave_gpu * tile_size_n * K
-            if wave_gpu * tile_size_n > N :
-                # dram实际访问量
-                wave_x = (N + tile_size_n - 1) // tile_size_n
-                wave_y = (wave_gpu + wave_x -1) // wave_x
-                a_dram_ldg = wave_y * tile_size_m * K
-                b_dram_ldg = N * K 
-            else:
-                wave_x = wave_gpu
-                wave_y = 1
-                a_dram_ldg = wave_y * tile_size_m * K
-                b_dram_ldg = wave_x * tile_size_n * K
-            l2_hit_rate = 1 - ((a_dram_ldg + b_dram_ldg) / (a_ldg_request + b_ldg_request))
-            config.l2_hit_rate = l2_hit_rate
-            config.p_ldg = self.arch.bandwidth[1] * l2_hit_rate + self.arch.bandwidth[0] * (
-                1 - l2_hit_rate
-            )
-            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
-        elif ab_total_size > self.arch.l2_cache_size and np.prod(config.grid_size) <= wave_gpu:
-            config.type = 1
-            # if get_log_level()>=1:debug_info(f"中矩阵：{ab_total_size/1024/1024}MB, {np.prod(config.grid_size)}, wave_gpu:{wave_gpu}")
-            # 大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数不超过一个 wave 大小；
-            a_ldg_request = np.prod(config.grid_size) * tile_size_m * K
-            b_ldg_request = np.prod(config.grid_size) * tile_size_n * K
-            a_dram_ldg = M * K
-            b_dram_ldg = N * K
-            l2_hit_rate = 1 - ((a_dram_ldg + b_dram_ldg) / (a_ldg_request + b_ldg_request))
-            config.l2_hit_rate = l2_hit_rate
-            config.p_ldg = self.arch.bandwidth[1] * l2_hit_rate + self.arch.bandwidth[0] * (
-                1 - l2_hit_rate
-            )
-            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
-        elif ab_total_size <= self.arch.l2_cache_size :
+        # 这里我们并没有考虑访问 C 矩阵的影响，在实践中会把 L2 cache 的命中率拉低一点
+        if ab_total_size <= self.arch.l2_cache_size :
             config.type = 2
             # if get_log_level()>=1:debug_info(f"小矩阵：{ab_total_size/1024/1024}MB")
             #小矩阵，即 M, N, K 较小,A, B 矩阵可以完全放进 L2 and Tile 总数超过一个 wave 大小；
             config.l2_hit_rate = 1
             config.p_ldg = self.arch.bandwidth[1]
-            config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
+        else:
+            if np.prod(config.grid_size) > wave_gpu and ab_total_size > self.arch.l2_cache_size:
+                config.type = 0
+                '''
+                大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数超过一个 wave 大小；
+                '''
+                # jisuanliang = tile_size_m * tile_size_n * K *2 (乘加)
+                # fancunliang = (tile_size_m + tile_size_n) * K * (DataType(self.func_info.in_dtype).bits+7//8)
+                # wave访存请求量, wave_gpu个block，每一个block访问a tile_size_m * K, b对应
+                a_ldg_request = wave_gpu * tile_size_m * K
+                b_ldg_request = wave_gpu * tile_size_n * K
+                
+                swizzle_tile_num = config.swizzle_factor ** 2 
+                # 一个wave有多少个横向的swizz tile, for b 
+                swizzle_x = (wave_gpu + swizzle_tile_num - 1) // swizzle_tile_num
+                if swizzle_x * tile_size_n * config.swizzle_factor > N:
+                    # dram实际访问量
+                    swizzle_y = (wave_gpu + swizzle_x - 1) // swizzle_x
+                    a_dram_ldg = swizzle_y * config.swizzle_factor * tile_size_m * K
+                    b_dram_ldg = N * K
+                else:
+                    swizzle_y = (wave_gpu + swizzle_x - 1) // swizzle_x
+                    a_dram_ldg = swizzle_y * config.swizzle_factor * tile_size_m * K
+                    b_dram_ldg = swizzle_x * config.swizzle_factor * tile_size_n * K
+            else:# ab_total_size > self.arch.l2_cache_size and np.prod(config.grid_size) <= wave_gpu:
+                config.type = 1
+                # if get_log_level()>=1:debug_info(f"中矩阵：{ab_total_size/1024/1024}MB, {np.prod(config.grid_size)}, wave_gpu:{wave_gpu}")
+                # 大矩阵，即 M, N, K 较大,A, B 矩阵无法完全放进 L2 and Tile 总数不超过一个 wave 大小；
+                a_ldg_request = np.prod(config.grid_size) * tile_size_m * K
+                b_ldg_request = np.prod(config.grid_size) * tile_size_n * K
+                a_dram_ldg = M * K
+                b_dram_ldg = N * K
+                
+            l2_hit_rate = 1 - ((a_dram_ldg + b_dram_ldg) / (a_ldg_request + b_ldg_request))
+            config.l2_hit_rate = l2_hit_rate
+            config.p_ldg = self.arch.bandwidth[1] * l2_hit_rate + self.arch.bandwidth[0] * (
+                1 - l2_hit_rate
+            )
+            
+        config.device_ratio = self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
+
         if config.fma_ldg_ratio <= (
             self.arch.processing_power[3] * 1e12 / (config.p_ldg * (2**30))
         ):
             config.performance = config.p_ldg* (2**30) * config.fma_ldg_ratio
+            config.time = - config.num_wave * (config.tile_size_m * config.tile_size_n * K * 2) / config.performance 
         else:
             config.performance = self.arch.processing_power[3] * 1e12
+            config.time = - config.num_wave * (config.tile_size_m * config.tile_size_n * K * 2) / config.performance 
             
         ffma = config.micro_shape_x*config.wmma_m*config.micro_shape_y*config.wmma_n*config.micro_shape_k*config.wmma_k*2
         lds = (config.micro_shape_x*config.wmma_m+config.micro_shape_y*config.wmma_n)*(config.micro_shape_k*config.wmma_k) * in_bytes
@@ -232,20 +258,8 @@ class WMMAConfigEmiter(BaseConfigEmiter):
         if K % tile_size_k != 0:
             config.assign_score += tile_size_k - K % tile_size_k
 
-    def check_config_valid(self, config: WMMAConfig, bytes, pad_offset) -> bool:
-        self.estimate_smem_usage(config, bytes, pad_offset)
-        if config.smem_usage > self.arch.max_smem_per_block:
-            if get_log_level()>=1:debug_info(f"smem usage {config.smem_usage} exceeds {self.arch.max_smem_per_block}")
-            return False
-        self.estimate_registers_usage(config)
-        if config.reg_usage > self.arch.max_registers_per_thread:
-            if get_log_level()>=1:debug_info(f"reg usage {config.reg_usage} exceeds {self.arch.max_registers_per_thread}")
-            return False
-        return True
-
     def score_config(self, config: WMMAConfig):
-        return (config.static_shape_align, config.performance, config.micro_performance, -config.assign_score)
-        # return (config.static_shape_align, config.micro_performance, config.performance, -config.assign_score)
+        return (config.static_shape_align, config.time, config.performance, config.micro_performance, -config.assign_score)
         
     def get_max_tile_size(self, bytes, in_pad, stages: int):
         # return upperbound of tile_m+tile_n

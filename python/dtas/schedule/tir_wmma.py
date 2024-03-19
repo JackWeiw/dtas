@@ -29,7 +29,7 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         k_kernel_size = config.micro_shape_k * config.wmma_k
         sch.pad_einsum(
             main_block,
-            [1, x_kernel_size, y_kernel_size, k_kernel_size],
+            [1, config.swizzle_factor * x_kernel_size, config.swizzle_factor * y_kernel_size, k_kernel_size],
         )
         batch, i, j, k = sch.get_loops(main_block)
 
@@ -43,11 +43,14 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         block_inner = block
         # 外面一层
         block_outer = sch.blockize(i_inner)
+        # swizzle 
+        # https://github.com/NVIDIA/cutlass/issues/1017
+        # https://developer.nvidia.com/blog/optimizing-compute-shaders-for-l2-locality-using-thread-group-id-swizzling/
         i0, i1, i2, i3 = sch.split(
             i,
             factors=[
                 None,
-                1,
+                config.swizzle_factor,
                 config.i,
                 config.micro_shape_x,
             ],
@@ -55,8 +58,8 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         j0, j1, j2, j3 = sch.split(
             j,
             factors=[
-                1,
                 None,
+                config.swizzle_factor,
                 config.j,
                 config.micro_shape_y,
             ],
@@ -70,32 +73,33 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         sch.annotate(k1, "software_pipeline_order", [0, 1, 2])
 
         ## n/15/16,2560/8/16,10240/12/16,4,5,2,6,3,2
-        sch.reorder(i0, j0, i1, j1, j2, i2, k0, k1, i3, j3)
-
+        sch.reorder(i0, j0, i1, j1, i2, j2, k0, k1, i3, j3)
+        
         """
         tile_m=wmma_m*micro_shape_x*i
         tile_n=wmma_n*micro_shape_y*j
         tile_k=wmma_k*micro_shape_k*unroll_k
         """
-
-        block_idx = sch.fuse(i0, j0)
-        block_idy = sch.fuse(i1, j1)
-        thread_idy = sch.fuse(j2, i2)
-        # sch.unroll(k1)
-        ## launch statistic
-        analyzer = Analyzer()
-        grid_x = analyzer.simplify(sch.get(block_idx).extent)
-        grid_y = analyzer.simplify(sch.get(block_idy).extent)
-        grid_z = analyzer.simplify(sch.get(batch).extent)
-        config.grid_size = [grid_z, grid_y, grid_x]
-        block_size_y = analyzer.simplify(sch.get(thread_idy).extent)
-        config.block_size = [1, block_size_y, config.warp_size]
-
-        sch.bind(batch, "blockIdx.z")
+        block_idy = sch.fuse(i0, j0)
+        block_idx = sch.fuse(i1, j1)
         sch.bind(block_idx, "blockIdx.x")
         sch.bind(block_idy, "blockIdx.y")
+        sch.bind(batch, "blockIdx.z")
+        
+        thread_idz = i2
+        thread_idy = j2
+        sch.bind(thread_idz, "threadIdx.z")
         sch.bind(thread_idy, "threadIdx.y")
 
+        ## launch statistic
+        analyzer = Analyzer()
+        grid_z = analyzer.simplify(sch.get(batch).extent)
+        grid_x = analyzer.simplify(sch.get(block_idx).extent)
+        grid_y = analyzer.simplify(sch.get(block_idy).extent)
+        config.grid_size = [grid_z, grid_y, grid_x]
+        block_size_z = analyzer.simplify(sch.get(thread_idz).extent)
+        block_size_y = analyzer.simplify(sch.get(thread_idy).extent)
+        config.block_size = [block_size_z, block_size_y, config.warp_size]
         AS = sch.cache_read(block_outer, 0, "shared.dyn")
         BS = sch.cache_read(block_outer, 1, "shared.dyn")
         sch.compute_at(AS, k0, preserve_unit_loops=True)
@@ -208,4 +212,11 @@ class TIRWMMAScheduler(TIRSchedulerBase):
         )
         sch.bind(f1, "threadIdx.x")
         sch.vectorize(f2)
+        # 下面用多线程加速epoligue反而会降低性能
+        # if sch.get(ax).extent >= config.block_size[1]:
+        #     ax, f0 = sch.split(ax, [None, config.block_size[1]])
+        #     sch.bind(f0, "threadIdx.y")
+        #     if sch.get(ax).extent >= config.block_size[0]:
+        #         ax, f0 = sch.split(ax, [None, config.block_size[0]])
+        #         sch.bind(f0, "threadIdx.z")
         return sch
