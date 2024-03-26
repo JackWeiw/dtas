@@ -17,11 +17,13 @@ struct kernel_entry_info
 void* __tvm_module_ctx = NULL;
 static void* __tvm_set_device_packed = NULL;
 static void* fused_softmax_cast_n_1_to_1024__kernel_packed = NULL;
-static void* fused_softmax_cast_n_1025_to_2048__kernel_packed = NULL;
-static void* fused_softmax_cast_n_2049_to_2560__kernel_packed = NULL;
+static void* fused_softmax_cast_n_1025_to_1536__kernel_packed = NULL;
+static void* fused_softmax_cast_n_1537_to_1792__kernel_packed = NULL;
+static void* fused_softmax_cast_n_1793_to_2048__kernel_packed = NULL;
+static void* fused_softmax_cast_n_2049_to_2304__kernel_packed = NULL;
+static void* fused_softmax_cast_n_2305_to_2560__kernel_packed = NULL;
 static void* fused_softmax_cast_n_2561_to_3072__kernel_packed = NULL;
-static void* fused_softmax_cast_n_3073_to_3584__kernel_packed = NULL;
-static void* fused_softmax_cast_n_3585_to_4096__kernel_packed = NULL;
+static void* fused_softmax_cast_n_3073_to_4096__kernel_packed = NULL;
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -80,24 +82,22 @@ TVM_DLL int32_t fused_softmax_cast(void* args, int32_t* arg_type_ids, int32_t nu
   ((int32_t*)stack_tcode)[2] = 0;
   
   kernel_entry_info call_table[] = {
-    {{ (int64_t)1000, (int64_t)1024,-1}, fused_softmax_cast_n_1_to_1024__kernel_packed, "fused_softmax_cast_n_1_to_1024__kernel"},
-    {{ (int64_t)1000, (int64_t)128, (n * (int64_t)4)}, fused_softmax_cast_n_1025_to_2048__kernel_packed, "fused_softmax_cast_n_1025_to_2048__kernel"},
-    {{ (int64_t)1000, (int64_t)160, (n * (int64_t)4)}, fused_softmax_cast_n_2049_to_2560__kernel_packed, "fused_softmax_cast_n_2049_to_2560__kernel"},
-    {{ (int64_t)1000, (int64_t)192, (n * (int64_t)4)}, fused_softmax_cast_n_2561_to_3072__kernel_packed, "fused_softmax_cast_n_2561_to_3072__kernel"},
-    {{ (int64_t)1000, (int64_t)192, (n * (int64_t)4)}, fused_softmax_cast_n_3073_to_3584__kernel_packed, "fused_softmax_cast_n_3073_to_3584__kernel"},
-    {{ (int64_t)1000, (int64_t)256, (n * (int64_t)4)}, fused_softmax_cast_n_3585_to_4096__kernel_packed, "fused_softmax_cast_n_3585_to_4096__kernel"},
+    {{ (int64_t)12800, (int64_t)128}, fused_softmax_cast_n_1_to_1024__kernel_packed, "fused_softmax_cast_n_1_to_1024__kernel"},
+    {{ (int64_t)12800, (int64_t)160}, fused_softmax_cast_n_1025_to_1536__kernel_packed, "fused_softmax_cast_n_1025_to_1536__kernel"},
+    {{ (int64_t)12800, (int64_t)256}, fused_softmax_cast_n_1537_to_1792__kernel_packed, "fused_softmax_cast_n_1537_to_1792__kernel"},
+    {{ (int64_t)12800, (int64_t)192}, fused_softmax_cast_n_1793_to_2048__kernel_packed, "fused_softmax_cast_n_1793_to_2048__kernel"},
+    {{ (int64_t)12800, (int64_t)288}, fused_softmax_cast_n_2049_to_2304__kernel_packed, "fused_softmax_cast_n_2049_to_2304__kernel"},
+    {{ (int64_t)12800, (int64_t)224}, fused_softmax_cast_n_2305_to_2560__kernel_packed, "fused_softmax_cast_n_2305_to_2560__kernel"},
+    {{ (int64_t)12800, (int64_t)256}, fused_softmax_cast_n_2561_to_3072__kernel_packed, "fused_softmax_cast_n_2561_to_3072__kernel"},
+    {{ (int64_t)12800, (int64_t)288}, fused_softmax_cast_n_3073_to_4096__kernel_packed, "fused_softmax_cast_n_3073_to_4096__kernel"},
      };
   int64_t index = (n/256) > 15 ? 15 : n/256;
-  int64_t index_table[] = {0,0,0,0,1,1,1,1,2,2,3,3,4,4,5,5};
+  int64_t index_table[] = {0,0,0,0,1,1,2,3,4,5,6,6,7,7,7,7};
   kernel_entry_info info = call_table[index_table[index]];
 (((TVMValue*)stack_value)[3].v_int64) = info.launch_args[0];
   ((int32_t*)stack_tcode)[3] = 0;
   (((TVMValue*)stack_value)[4].v_int64) = info.launch_args[1];
   ((int32_t*)stack_tcode)[4] = 0;
-if (info.launch_args[2] != -1){
-  (((TVMValue*)stack_value)[5].v_int64) = info.launch_args[2];
-  ((int32_t*)stack_tcode)[5] = 0;
-}
 
   if (info.kernel_handle == NULL)
   {
@@ -108,10 +108,11 @@ if (info.launch_args[2] != -1){
   }
   TVMValue ret_val_1;
   int ret_type_code_1;
-  if (TVMFuncCall(info.kernel_handle, (TVMValue *)stack_value, (int *)stack_tcode, info.launch_args[2]==-1?5:6, &ret_val_1, &ret_type_code_1) != 0)
+  if (TVMFuncCall(info.kernel_handle, (TVMValue *)stack_value, (int *)stack_tcode, 5, &ret_val_1, &ret_type_code_1) != 0)
   {
     return -1;
   }
   return 0;
-}     
+}
+ 
     

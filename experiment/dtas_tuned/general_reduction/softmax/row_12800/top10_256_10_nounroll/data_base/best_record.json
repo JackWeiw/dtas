@@ -1,0 +1,258 @@
+[
+    {
+        "fused_softmax_cast_<n: Range(1, 256)>": {
+            "latency(ms)": 0.033051230017211705,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 128,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 12
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(257, 512)>": {
+            "latency(ms)": 0.054258289758064515,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 128,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 12
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(513, 768)>": {
+            "latency(ms)": 0.07974162658536585,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 128,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 12
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(769, 1024)>": {
+            "latency(ms)": 0.1022740941551541,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 128,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 12
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(1025, 1280)>": {
+            "latency(ms)": 0.13348205228234558,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 160,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 9
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(1281, 1536)>": {
+            "latency(ms)": 0.1609712219387755,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 160,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 9
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(1537, 1792)>": {
+            "latency(ms)": 0.19346679775561096,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 256,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 6
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(1793, 2048)>": {
+            "latency(ms)": 0.21228296986607145,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 192,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 8
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(2049, 2304)>": {
+            "latency(ms)": 0.24270244732824428,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 288,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 5
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(2305, 2560)>": {
+            "latency(ms)": 0.25959347295373664,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 224,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 6
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(2561, 2816)>": {
+            "latency(ms)": 0.28205388412162163,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 256,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 6
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(2817, 3072)>": {
+            "latency(ms)": 0.3220233488549618,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 256,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 6
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(3073, 3328)>": {
+            "latency(ms)": 0.3331535878453039,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 288,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 5
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(3329, 3584)>": {
+            "latency(ms)": 0.3513821241525424,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 288,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 5
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(3585, 3840)>": {
+            "latency(ms)": 0.41517825744680853,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 288,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 5
+                }
+            ]
+        }
+    },
+    {
+        "fused_softmax_cast_<n: Range(3841, 4096)>": {
+            "latency(ms)": 0.4533896107594937,
+            "config": [
+                {
+                    "bx": null,
+                    "bx_factor": 1,
+                    "len_tx": 288,
+                    "unroll_depth": 256,
+                    "vector_size": 4,
+                    "temp_storage": "cache",
+                    "max_active_blocks_per_sm": 5
+                }
+            ]
+        }
+    }
+]

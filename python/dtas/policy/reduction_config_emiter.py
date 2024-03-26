@@ -82,12 +82,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
         base_block_size = self.arch.warp_size * self.arch.sm_partition  # 128
         block_size = base_block_size
         config_list = []
-        if re_range.end > 1024:
-            temp_storage = ( "shared.dyn" if max_smem_usage <= self.arch.max_smem_per_block else "cache")
-        else:
-            # case reduction is dynamic and reduction_len upperbound < 1024, 
-            # if use smem will introduce extra sync overhead, so we use "cache" as temp storage 
-            temp_storage = "cache"
+        temp_storage = "cache"
                 
         if temp_storage == "shared.dyn":
             vec_candidate = self.plan_vectorize(re_range, in_bytes)
@@ -99,7 +94,7 @@ class ReductionConfigEmiter(BaseConfigEmiter):
             config.unroll_depth = unroll_depth
             config.temp_storage = temp_storage
             config.len_tx = block_size
-            self.get_num_blocks(config, row_range, max_smem_usage, temp_storage=="shared.dyn",kNumWaves)
+            self.get_num_blocks(config, row_range, max_smem_usage, temp_storage=="shared.dyn", kNumWaves)
             if vec_candidate is not None:
                 config.vector_size = vec_candidate
             config_list.append(config)
@@ -111,13 +106,13 @@ class ReductionConfigEmiter(BaseConfigEmiter):
                 debug_info(config)
 
         def _score_config(config:ReductionConfig):
-            if max_smem_usage <= self.arch.max_smem_per_block and config.temp_storage == "shared.dyn":
+            # if max_smem_usage <= self.arch.max_smem_per_block and config.temp_storage == "shared.dyn":
                 # 优先udaOccupancyMaxActiveBlocksPerMultiprocessor,若结果相同,使用较大的 block_size
                 # debug_info(f"max_smem_usage <= self.arch.max_smem_per_block {max_smem_usage}")
                 # 忽略register的影响，因为比较难估算
                 return config.max_active_blocks_per_sm, config.len_tx, config.vector_size
-            else:
-                return config.len_tx, config.vector_size
+            # else:
+                # return config.len_tx, config.vector_size
 
         return (
             sorted(config_list, key=_score_config, reverse=True)[:topk]
